@@ -6,13 +6,15 @@
 
 AEcoActorGameMode::AEcoActorGameMode()
 {
-	DefaultPawnClass = AEcoActorCharacter::StaticClass();
 	
+	DefaultPawnClass = AEcoActorCharacter::StaticClass();
+	/*
 	ConstructorHelpers::FClassFinder<UUserWidget> STARTUI(TEXT("/Game/Main/UI/StartWidget.StartWidget_C"));
 	if (STARTUI.Succeeded())
 	{
 		GameStartWidgetClass = STARTUI.Class;
 	}
+	*/
 }
 
 void AEcoActorGameMode::BeginPlay()

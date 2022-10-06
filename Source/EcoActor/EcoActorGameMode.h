@@ -4,7 +4,6 @@
 
 #include "EcoActor.h"
 #include "GameFramework/GameModeBase.h"
-#include "EcoActorStartWidget.h"
 #include "EcoActorGameMode.generated.h"
 
 UCLASS(minimalapi)
@@ -19,7 +18,6 @@ private:
 	void BeginPlay() override;
 
 	TSubclassOf<UUserWidget> GameStartWidgetClass;
-	UEcoActorStartWidget* GameStartWidget;
 };
 
 
