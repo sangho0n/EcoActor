@@ -18,7 +18,7 @@ AEcoActorGameMode::AEcoActorGameMode()
 void AEcoActorGameMode::BeginPlay()
 {
 	Super::BeginPlay();
-
+	/*
 	if (IsValid(GameStartWidgetClass))
 	{
 		// 위젯을 생성한다
@@ -30,4 +30,5 @@ void AEcoActorGameMode::BeginPlay()
 			GameStartWidget->AddToViewport();
 		}
 	}
+	*/
 }
