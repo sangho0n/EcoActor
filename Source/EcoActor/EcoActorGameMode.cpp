@@ -6,7 +6,6 @@
 
 AEcoActorGameMode::AEcoActorGameMode()
 {
-	
 	DefaultPawnClass = AEcoActorCharacter::StaticClass();
 	
 	ConstructorHelpers::FClassFinder<UUserWidget> STARTUI(TEXT("/Game/Main/UI/BP_StartWidget.BP_StartWidget_C"));

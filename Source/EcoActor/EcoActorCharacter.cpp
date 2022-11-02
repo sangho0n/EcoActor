@@ -66,6 +66,7 @@ AEcoActorCharacter::AEcoActorCharacter()
 	bIsEquipped = false;
 	bIsAttacking = false;
 	bHoldKeyControl = false;
+	TargetPoint = FVector::ZeroVector;
 }
 
 void AEcoActorCharacter::BeginPlay()
@@ -96,6 +97,13 @@ void AEcoActorCharacter::PostInitializeComponents()
 
 	AnimInstance->OnStartCombo.AddLambda([this]()->void {
 		bHoldKeyControl = true;
+		const FVector CurrPoint = GetActorLocation();
+		const FRotator Rotation = GetActorRotation();
+		FRotator NormedRot = Rotation.GetNormalized();
+
+		// get direction vector
+		const FVector Direction = NormedRot.Vector();
+		TargetPoint = CurrPoint + Direction * 300.0f;
 		});
 
 	AnimInstance->OnComboHitCheck.AddDynamic(this, &AEcoActorCharacter::ComboHit);
@@ -217,13 +225,8 @@ void AEcoActorCharacter::Tick(float deltaSeconds)
 {
 	if (bHoldKeyControl)
 	{
-		const FRotator Rotation = Controller->GetControlRotation();
-		FRotator NormedRot = Rotation.GetNormalized();
-
-		// get right vector 
-		const FVector Direction = NormedRot.Vector();
-		// add movement in that direction
-		AddMovementInput(Direction, 1.0f);
+		// move that point
+		SetActorLocation(FMath::VInterpTo(GetActorLocation(), TargetPoint, deltaSeconds, 3.0f), true);
 	}
 }
 

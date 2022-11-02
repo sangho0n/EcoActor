@@ -81,6 +81,7 @@ private:
 	bool bIsComboInputOn;
 	bool bIsEquipped;
 	bool bHoldKeyControl;
+	FVector TargetPoint;
 
 	class UEcoActorCharacterAnimInstance* AnimInstance;
 protected:
