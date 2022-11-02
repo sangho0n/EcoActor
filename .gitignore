@@ -75,6 +75,7 @@ DerivedDataCache/*
 
 # Content 폴더 내 Main만 제외하고 모두 무시
 !Content/Main
+!Content/Level2
 Content/AfricanAnimalsPack
 Content/AnimStarterPack
 Content/Cargo_Ship
