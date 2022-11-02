@@ -8,12 +8,15 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "EcoActorCharacterAnimInstance.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AEcoActorCharacter
 
+
 AEcoActorCharacter::AEcoActorCharacter()
 {
+	PrimaryActorTick.bCanEverTick = true;
 
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
@@ -56,15 +59,77 @@ AEcoActorCharacter::AEcoActorCharacter()
 	}
 
 	setPlayerMode(EGameMode::ThirdPerson);
+
+	currentCombo = 0;
+	bCanNextCombo = false;
+	bIsComboInputOn = false;
+	bIsEquipped = false;
+	bIsAttacking = false;
+	bHoldKeyControl = false;
 }
 
+void AEcoActorCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
+void AEcoActorCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	AnimInstance = Cast<UEcoActorCharacterAnimInstance>(GetMesh()->GetAnimInstance());
+
+	AnimInstance->OnNextComboCheck.AddLambda([this]()->void
+	{
+			bHoldKeyControl = false;
+			bCanNextCombo = false;
+			if (bIsComboInputOn)
+			{
+				bCanNextCombo = true;
+				bIsComboInputOn = false;
+				currentCombo = FMath::Clamp<int32>(currentCombo + 1, 1, 4);
+				AnimInstance->JumpToComboSection(currentCombo);
+			}
+		});
+
+	AnimInstance->OnMontageEnded.AddDynamic(this, &AEcoActorCharacter::OnComboMontageEnded);
+
+	AnimInstance->OnStartCombo.AddLambda([this]()->void {
+		bHoldKeyControl = true;
+		});
+
+	AnimInstance->OnComboHitCheck.AddDynamic(this, &AEcoActorCharacter::ComboHit);
+}
+
+void AEcoActorCharacter::setPlayerMode(EGameMode newGameMode)
+{
+	switch (newGameMode)
+	{
+	case EGameMode::ThirdPerson:
+		// Don't rotate when the controller rotates. Let that just affect the camera.
+		bUseControllerRotationPitch = false;
+		bUseControllerRotationRoll = false;
+		bUseControllerRotationYaw = false;
+
+		CameraBoom->bInheritPitch = true;
+		CameraBoom->bInheritYaw = true;
+		CameraBoom->bInheritRoll = true;
+		CameraBoom->TargetArmLength = 300.0f; // The camera follows at this distance behind the character	
+		CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
+		FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
+		FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
+		break;
+	case EGameMode::FirstPerson:
+
+		break;
+	}
+}
 
 void AEcoActorCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
 	// Set up gameplay key bindings
 	check(PlayerInputComponent);
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
-	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AEcoActorCharacter::Jump);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &AEcoActorCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AEcoActorCharacter::MoveRight);
@@ -73,12 +138,13 @@ void AEcoActorCharacter::SetupPlayerInputComponent(class UInputComponent* Player
 	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 
+	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &AEcoActorCharacter::Attack);
 }
 
-void AEcoActorCharacter::TurnAtRate(float Rate)
+void AEcoActorCharacter::Jump()
 {
-	// calculate delta for this frame from the rate information
-	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
+	if (bHoldKeyControl) return;
+	Super::Jump();
 }
 
 void AEcoActorCharacter::LookUpAtRate(float Rate)
@@ -91,6 +157,7 @@ void AEcoActorCharacter::MoveForward(float Value)
 {
 	if ((Controller != NULL) && (Value != 0.0f))
 	{
+		if (bHoldKeyControl) return;
 		// find out which way is forward
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
@@ -105,6 +172,7 @@ void AEcoActorCharacter::MoveRight(float Value)
 {
 	if ( (Controller != NULL) && (Value != 0.0f) )
 	{
+		if (bHoldKeyControl) return;
 		// find out which way is right
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
@@ -116,26 +184,59 @@ void AEcoActorCharacter::MoveRight(float Value)
 	}
 }
 
-void AEcoActorCharacter::setPlayerMode(EGameMode newGameMode)
+void AEcoActorCharacter::Attack()
 {
-	switch (newGameMode)
+	if (!bIsEquipped)
 	{
-	case EGameMode::ThirdPerson:
-		// Don't rotate when the controller rotates. Let that just affect the camera.
-		bUseControllerRotationPitch = false;
-		bUseControllerRotationYaw = false;
-		bUseControllerRotationRoll = false;
+		if (nullptr != AnimInstance)
+		{
+			if (bIsAttacking)
+			{
+				if(bCanNextCombo)
+					bIsComboInputOn = true;
+			}
+			else
+			{
+				bIsComboInputOn = false;
+				bCanNextCombo = true;
+				currentCombo = FMath::Clamp<int32>(currentCombo + 1, 1, 4);
+				AnimInstance->PlayComboMontage();
+				AnimInstance->JumpToComboSection(currentCombo);
 
-		CameraBoom->bInheritPitch = true;
-		CameraBoom->bInheritYaw = true;
-		CameraBoom->bInheritRoll = true;
-		CameraBoom->TargetArmLength = 300.0f; // The camera follows at this distance behind the character	
-		CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
-		FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
-		FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
-		break;
-	case EGameMode::FirstPerson:
-
-		break;
+				bIsAttacking = true;
+			}
+		}
 	}
+	else
+	{
+
+	}
+}
+
+void AEcoActorCharacter::Tick(float deltaSeconds)
+{
+	if (bHoldKeyControl)
+	{
+		const FRotator Rotation = Controller->GetControlRotation();
+		FRotator NormedRot = Rotation.GetNormalized();
+
+		// get right vector 
+		const FVector Direction = NormedRot.Vector();
+		// add movement in that direction
+		AddMovementInput(Direction, 1.0f);
+	}
+}
+
+void AEcoActorCharacter::OnComboMontageEnded(UAnimMontage* Mont, bool bInterupped)
+{
+	bHoldKeyControl = false;
+	bIsComboInputOn = false;
+	bIsAttacking = false;
+	bCanNextCombo = false;
+	currentCombo = 0;
+}
+
+void AEcoActorCharacter::ComboHit()
+{
+
 }

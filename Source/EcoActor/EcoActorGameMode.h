@@ -3,6 +3,7 @@
 #pragma once
 
 #include "EcoActor.h"
+#include "EcoActorStartWidget.h"
 #include "GameFramework/GameModeBase.h"
 #include "EcoActorGameMode.generated.h"
 
@@ -18,6 +19,7 @@ private:
 	void BeginPlay() override;
 
 	TSubclassOf<UUserWidget> GameStartWidgetClass;
+	UEcoActorStartWidget* StartWidget;
 };
 
 

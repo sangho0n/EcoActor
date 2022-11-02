@@ -22,6 +22,12 @@ class AEcoActorCharacter : public ACharacter
 public:
 	AEcoActorCharacter();
 
+	virtual void BeginPlay() override;
+
+	virtual void PostInitializeComponents() override;
+
+	virtual void Tick(float deltaSeconds) override;
+
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseTurnRate;
@@ -31,6 +37,7 @@ public:
 	float BaseLookUpRate;
 
 protected:
+	void Jump() override;
 
 	/** Called for forwards/backward input */
 	void MoveForward(float Value);
@@ -50,16 +57,12 @@ protected:
 	 */
 	void LookUpAtRate(float Rate);
 
+	void Attack();
+
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	// End of APawn interface
-
-public:
-	/** Returns CameraBoom subobject **/
-	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
-	/** Returns FollowCamera subobject **/
-	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
 private:
 	enum EGameMode
@@ -69,5 +72,23 @@ private:
 	};
 public:
 	void setPlayerMode(EGameMode gameMode);
+
+private:
+	// combo ฐüทร
+	int32 currentCombo;
+	bool bCanNextCombo;
+	bool bIsAttacking;
+	bool bIsComboInputOn;
+	bool bIsEquipped;
+	bool bHoldKeyControl;
+
+	class UEcoActorCharacterAnimInstance* AnimInstance;
+protected:
+	UFUNCTION()
+	void ComboHit();
+
+private:
+	UFUNCTION()
+	void OnComboMontageEnded(UAnimMontage* Montage, bool bInterupted);
 };
 
