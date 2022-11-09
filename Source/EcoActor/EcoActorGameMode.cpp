@@ -20,6 +20,7 @@ void AEcoActorGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	/* 게임 이름 변경 및 미니게임 형식으로 인한 수정
 	if (IsValid(GameStartWidgetClass))
 	{
 		// 위젯을 생성한다
@@ -38,4 +39,5 @@ void AEcoActorGameMode::BeginPlay()
 			palyerController->bEnableMouseOverEvents = true;
 		}
 	}
+	*/
 }
