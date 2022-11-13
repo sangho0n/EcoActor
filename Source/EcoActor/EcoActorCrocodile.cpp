@@ -3,7 +3,7 @@
 
 #include "EcoActorCrocodile.h"
 #include "AnimalAIController.h"
-#include "CrocoAnimInstance.h"
+#include "AnimalAnimInstance.h"
 #include "Components/CapsuleComponent.h"
 
 // Sets default values
@@ -14,8 +14,11 @@ AEcoActorCrocodile::AEcoActorCrocodile()
 
 	GetCapsuleComponent()->InitCapsuleSize(60.f, 60.0f);
 	GetCapsuleComponent()->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, 0.0f), FRotator(0.0f, 0.0f, 0.0f));
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("Animal"));
+
 	RootComponent = GetCapsuleComponent();
 	GetMesh()->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, -60.0f), FRotator(0.0f, -90.0f, 0.0f));
+	GetMesh()->SetCollisionProfileName(TEXT("NoCollision"));
 
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> SK_CROCO(TEXT("/Game/AfricanAnimalsPack/Crocodile/Meshes/SK_Crocodile.SK_Crocodile"));
 	if (SK_CROCO.Succeeded())
@@ -23,12 +26,13 @@ AEcoActorCrocodile::AEcoActorCrocodile()
 		GetMesh()->SetSkeletalMesh(SK_CROCO.Object);
 	}
 
-	static ConstructorHelpers::FClassFinder<UAnimInstance> CROCOANIM(TEXT("/Game/Main/Anim/Animals/croco/BP_CrocodileAnim.BP_CrocodileAnim_C"));
+	static ConstructorHelpers::FClassFinder<UAnimInstance> CROCOANIM(TEXT("/Game/Main/Anim/Animals/croco/BP_CrocoAnim.BP_CrocoAnim_C"));
 	if (CROCOANIM.Succeeded())
 	{
 		GetMesh()->SetAnimInstanceClass(CROCOANIM.Class);
 	}
-	
+	GetCharacterMovement()->MaxWalkSpeed = 300.0f;
+
 	AIControllerClass = AAnimalAIController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
@@ -40,6 +44,13 @@ void AEcoActorCrocodile::BeginPlay()
 	
 }
 
+
+void AEcoActorCrocodile::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &AEcoActorCrocodile::OnCharacterBeginOverlap);
+}
+
 // Called every frame
 void AEcoActorCrocodile::Tick(float DeltaTime)
 {
@@ -47,9 +58,11 @@ void AEcoActorCrocodile::Tick(float DeltaTime)
 
 }
 
-// Called to bind functionality to input
-void AEcoActorCrocodile::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-}
 
+void AEcoActorCrocodile::OnCharacterBeginOverlap(UPrimitiveComponent* OverlappedComp,
+	AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
+	bool bFromSweep, const FHitResult& SweepResult)
+{
+	LOG(Warning, TEXT("ttt"));
+	Destroy();
+}
