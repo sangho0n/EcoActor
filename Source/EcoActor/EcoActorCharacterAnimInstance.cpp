@@ -2,10 +2,11 @@
 
 
 #include "EcoActorCharacterAnimInstance.h"
+#include "EcoActorCharacter.h"
 
 UEcoActorCharacterAnimInstance::UEcoActorCharacterAnimInstance()
 {
-	CurrSpeed = 0.0f;
+	CurrSpeed = FVector::ZeroVector;
 	bInAir = false;
 
 	static ConstructorHelpers::FObjectFinder<UAnimMontage>Combo(TEXT("/Game/Main/Anim/Fight/AM_FullCombo.AM_FullCombo"));
@@ -13,6 +14,12 @@ UEcoActorCharacterAnimInstance::UEcoActorCharacterAnimInstance()
 	{
 		FullCombo = Combo.Object;
 	}
+	static ConstructorHelpers::FObjectFinder<UAnimationAsset> SHOT(TEXT("/Game/Main/Anim/Character/WithGun/retargettedFire_Rifle_Ironsights.retargettedFire_Rifle_Ironsights"));
+	if (SHOT.Succeeded())
+	{
+		ShotAnim = SHOT.Object;
+	}
+	bIsEquipping = false;
 }
 
 void UEcoActorCharacterAnimInstance::NativeUpdateAnimation(float deltaSeconds)
@@ -22,14 +29,19 @@ void UEcoActorCharacterAnimInstance::NativeUpdateAnimation(float deltaSeconds)
 	auto Pawn = TryGetPawnOwner();
 	if (::IsValid(Pawn))
 	{
-		CurrSpeed = Pawn->GetVelocity().Size();
+		auto speedVec = Pawn->GetVelocity();
+		speedVec.Z = 0.0f;
+		CurrSpeed = speedVec;
 		auto Character = Cast<ACharacter>(Pawn);
 		if (Character)
 		{
 			bInAir = Character->GetMovementComponent()->IsFalling();
+			auto EcoActor = Cast<AEcoActorCharacter>(Character);
+			bIsAttacking = EcoActor->isAttacking();
+			bIsEquipped = EcoActor->isEquipped();
+			EcoActor->SetIsEquipping(bIsEquipping);
 		}
 	}
-
 }
 
 void UEcoActorCharacterAnimInstance::AnimNotify_StartCombo()
@@ -65,4 +77,10 @@ void UEcoActorCharacterAnimInstance::JumpToComboSection(int32 currCombo)
 FName UEcoActorCharacterAnimInstance::getComboNontageSectionName(int32 currCombo)
 {
 	return FName(*FString::Printf(TEXT("Combo%d"), currCombo));
+}
+
+
+void UEcoActorCharacterAnimInstance::AnimNotify_ShotTriggered()
+{
+	OnShotTriggered.Broadcast();
 }

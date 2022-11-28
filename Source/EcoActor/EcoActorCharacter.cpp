@@ -53,7 +53,7 @@ AEcoActorCharacter::AEcoActorCharacter()
 
 	// Animation
 	GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);
-	static ConstructorHelpers::FClassFinder<UAnimInstance> JUMP_AND_RUN_ANIM(TEXT("/Game/Main/Anim/AnimBP_JumpRun.AnimBP_JumpRun_C"));
+	static ConstructorHelpers::FClassFinder<UAnimInstance> JUMP_AND_RUN_ANIM(TEXT("/Game/Main/Anim/Character/AnimBP_JumpRun.AnimBP_JumpRun_C"));
 	if (JUMP_AND_RUN_ANIM.Succeeded())
 	{
 		GetMesh()->SetAnimInstanceClass(JUMP_AND_RUN_ANIM.Class);
@@ -69,6 +69,18 @@ AEcoActorCharacter::AEcoActorCharacter()
 	bIsAttacking = false;
 	bHoldKeyControl = false;
 	TargetPoint = FVector::ZeroVector;
+
+	LeftBullets = MaxBullets; 
+	Gun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Gun")); 
+	bIsEquipping = false;
+
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> RIFLE(TEXT("/Game/MilitaryWeapDark/Weapons/Assault_Rifle_B.Assault_Rifle_B"));
+	if (RIFLE.Succeeded())
+	{
+		Gun->SetSkeletalMesh(RIFLE.Object);
+	}
+
+	Gun->SetVisibility(false);
 }
 
 void AEcoActorCharacter::BeginPlay()
@@ -109,6 +121,8 @@ void AEcoActorCharacter::PostInitializeComponents()
 		});
 
 	AnimInstance->OnComboHitCheck.AddDynamic(this, &AEcoActorCharacter::ComboHit);
+
+	AnimInstance->OnShotTriggered.AddDynamic(this, &AEcoActorCharacter::Shot);
 }
 
 void AEcoActorCharacter::setPlayerMode(EGameMode newGameMode)
@@ -116,6 +130,8 @@ void AEcoActorCharacter::setPlayerMode(EGameMode newGameMode)
 	switch (newGameMode)
 	{
 	case EGameMode::ThirdPerson:
+		GetCharacterMovement()->bOrientRotationToMovement = true;
+		CameraBoom->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
 		// Don't rotate when the controller rotates. Let that just affect the camera.
 		bUseControllerRotationPitch = false;
 		bUseControllerRotationRoll = false;
@@ -129,8 +145,20 @@ void AEcoActorCharacter::setPlayerMode(EGameMode newGameMode)
 		FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 		FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 		break;
-	case EGameMode::FirstPerson:
+	case EGameMode::ShotMode:
+		GetCharacterMovement()->bOrientRotationToMovement = false; 		
+		bUseControllerRotationPitch = false;
+		bUseControllerRotationRoll = false;
+		bUseControllerRotationYaw = true;
 
+		CameraBoom->SetRelativeLocation(FVector(-50.0f, 40.0f, 60.0f));
+		CameraBoom->bInheritPitch = true;
+		CameraBoom->bInheritYaw = true;
+		CameraBoom->bInheritRoll = true;
+		CameraBoom->TargetArmLength = 30.0f;
+		CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
+		FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
+		FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 		break;
 	}
 }
@@ -149,6 +177,8 @@ void AEcoActorCharacter::SetupPlayerInputComponent(class UInputComponent* Player
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 
 	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &AEcoActorCharacter::Attack);
+	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &AEcoActorCharacter::AttackWithGunStart);
+	PlayerInputComponent->BindAction("Attack", IE_Released, this, &AEcoActorCharacter::AttackWithGunStop);
 }
 
 void AEcoActorCharacter::Jump()
@@ -196,31 +226,44 @@ void AEcoActorCharacter::MoveRight(float Value)
 
 void AEcoActorCharacter::Attack()
 {
-	if (!bIsEquipped)
-	{
-		if (nullptr != AnimInstance)
-		{
-			if (bIsAttacking)
-			{
-				if(bCanNextCombo)
-					bIsComboInputOn = true;
-			}
-			else
-			{
-				bIsComboInputOn = false;
-				bCanNextCombo = true;
-				currentCombo = FMath::Clamp<int32>(currentCombo + 1, 1, 4);
-				AnimInstance->PlayComboMontage();
-				AnimInstance->JumpToComboSection(currentCombo);
+	if (bIsEquipped || bIsEquipping) return;
 
-				bIsAttacking = true;
-			}
+	if (nullptr != AnimInstance)
+	{
+		if (bIsAttacking)
+		{
+			if(bCanNextCombo)
+				bIsComboInputOn = true;
+		}
+		else
+		{
+			bIsComboInputOn = false;
+			bCanNextCombo = true;
+			currentCombo = FMath::Clamp<int32>(currentCombo + 1, 1, 4);
+			AnimInstance->PlayComboMontage();
+			AnimInstance->JumpToComboSection(currentCombo);
+
+			bIsAttacking = true;
 		}
 	}
-	else
-	{
+}
 
-	}
+void AEcoActorCharacter::AttackWithGunStart()
+{
+	if (!bIsEquipped || bIsEquipping) return;
+
+	bIsAttacking = true;
+	GetCharacterMovement()->MaxWalkSpeed /= 2.0f;
+	setPlayerMode(EGameMode::ShotMode);
+}
+
+void AEcoActorCharacter::AttackWithGunStop()
+{
+	if (!bIsEquipped || bIsEquipping) return;
+
+	bIsAttacking = false;
+	GetCharacterMovement()->MaxWalkSpeed *= 2.0f;
+	setPlayerMode(EGameMode::ThirdPerson);
 }
 
 void AEcoActorCharacter::Tick(float deltaSeconds)
@@ -230,6 +273,23 @@ void AEcoActorCharacter::Tick(float deltaSeconds)
 		// move that point
 		SetActorLocation(FMath::VInterpTo(GetActorLocation(), TargetPoint, deltaSeconds, 3.0f), true);
 	}
+
+	if (bIsEquipped && bIsAttacking && LeftBullets == 0)
+	{
+		AttackWithGunStop();
+		bIsEquipped = false;
+		Gun->SetVisibility(false);
+	}
+}
+
+bool AEcoActorCharacter::isAttacking()
+{
+	return bIsAttacking;
+}
+
+void AEcoActorCharacter::SetIsEquipping(bool newVal)
+{
+	bIsEquipping = newVal;
 }
 
 void AEcoActorCharacter::OnComboMontageEnded(UAnimMontage* Mont, bool bInterupped)
@@ -244,4 +304,28 @@ void AEcoActorCharacter::OnComboMontageEnded(UAnimMontage* Mont, bool bInteruppe
 void AEcoActorCharacter::ComboHit()
 {
 
+}
+
+bool AEcoActorCharacter::isEquipped()
+{
+	return bIsEquipped;
+}
+
+void AEcoActorCharacter::Shot()
+{
+	LeftBullets--;
+	LOG(Warning, TEXT("Bullet left : %d"), LeftBullets);
+}
+
+void AEcoActorCharacter::Equip()
+{
+	if (bIsAttacking) return;
+
+	FName WeaponSocket(TEXT("hand_rSocket"));
+
+	Gun->SetVisibility(true);
+	Gun->SetCollisionProfileName("NoCollision");
+	Gun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocket);
+	bIsEquipped = true;
+	LeftBullets = MaxBullets;
 }
