@@ -8,36 +8,32 @@ AEcoActorGameMode::AEcoActorGameMode()
 {
 	DefaultPawnClass = AEcoActorCharacter::StaticClass();
 	
-	ConstructorHelpers::FClassFinder<UUserWidget> STARTUI(TEXT("/Game/Main/UI/BP_StartWidget.BP_StartWidget_C"));
-	if (STARTUI.Succeeded())
+	ConstructorHelpers::FClassFinder<UUserWidget> COMMONUI(TEXT("/Game/Main/UI/BP_Level3CommonUI.BP_Level3CommonUI_C"));
+	if (COMMONUI.Succeeded())
 	{
-		GameStartWidgetClass = STARTUI.Class;
+		CommonUIClass = COMMONUI.Class;
 	}
-	
 }
 
 void AEcoActorGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	/* 게임 이름 변경 및 미니게임 형식으로 인한 수정
-	if (IsValid(GameStartWidgetClass))
+	if (IsValid(CommonUIClass))
 	{
 		// 위젯을 생성한다
-		StartWidget = Cast<UEcoActorStartWidget>(CreateWidget(GetWorld(), GameStartWidgetClass));
+		CommonUI = Cast<ULevel3CommonUI>(CreateWidget(GetWorld(), CommonUIClass));
 
-		if (IsValid(StartWidget))
+		if (IsValid(CommonUI))
 		{
 			// 위젯을 뷰포트에 추가한다
-			StartWidget->AddToViewport();
+			CommonUI->AddToViewport();
 			
-			// 마우스 화면에 보이기
 			auto palyerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-			palyerController->SetInputMode(FInputModeGameAndUI());
-			palyerController->bShowMouseCursor = true;
-			palyerController->bEnableClickEvents = true;
-			palyerController->bEnableMouseOverEvents = true;
+			palyerController->SetInputMode(FInputModeGameOnly());
+			palyerController->bShowMouseCursor = false;
+			palyerController->bEnableClickEvents = false;
+			palyerController->bEnableMouseOverEvents = false;
 		}
 	}
-	*/
 }

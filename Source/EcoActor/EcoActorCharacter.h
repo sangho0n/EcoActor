@@ -59,6 +59,10 @@ protected:
 
 	void Attack();
 
+	void AttackWithGunStart();
+
+	void AttackWithGunStop();
+
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -68,15 +72,22 @@ private:
 	enum EGameMode
 	{
 		ThirdPerson,
-		FirstPerson
+		ShotMode
 	};
 public:
 	void setPlayerMode(EGameMode gameMode);
+
+	bool isAttacking();
+
+	bool isEquipped();
+
+	void SetIsEquipping(bool newvalue);
 
 private:
 	// combo ฐüทร
 	int32 currentCombo;
 	bool bCanNextCombo;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess=true))
 	bool bIsAttacking;
 	bool bIsComboInputOn;
 	bool bIsEquipped;
@@ -91,5 +102,20 @@ protected:
 private:
 	UFUNCTION()
 	void OnComboMontageEnded(UAnimMontage* Montage, bool bInterupted);
+
+private:
+	// gun
+	int32 LeftBullets;
+	const int32 MaxBullets = 20;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category=Gun, Meta=(AllowPrivateAccess=true))
+	bool bIsEquipping;
+
+	UFUNCTION()
+	void Shot();
+
+	USkeletalMeshComponent* Gun;
+
+public:
+	void Equip();
 };
 

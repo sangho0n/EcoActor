@@ -9,6 +9,7 @@
 DECLARE_MULTICAST_DELEGATE(FOnStartComboDelegate);
 DECLARE_MULTICAST_DELEGATE(FOnNextComboCheckDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnComboHitCheckDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnShotTriggeredDelegate);
 
 /**
  * 
@@ -23,7 +24,7 @@ public:
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Pawn, Meta=(AllowPrivateAccess = true))
-	float CurrSpeed;
+	FVector CurrSpeed;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Pawn, Meta = (AllowPrivateAccess = true))
 	bool bInAir;
@@ -37,8 +38,24 @@ private:
 	UFUNCTION()
 	void AnimNotify_ComboHitCheck();
 
+	UFUNCTION()
+	void AnimNotify_ShotTriggered();
+
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category=Attack, Meta=(AllowPrivateAccess=true))
 	UAnimMontage* FullCombo;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	UAnimationAsset* ShotAnim;
+
+protected:
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	bool bIsAttacking;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Gun, Meta = (AllowPrivateAccess = true))
+	bool bIsEquipped;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Gun, Meta = (AllowPrivateAccess = true))
+	bool bIsEquipping;
 
 public:
 	void PlayComboMontage();
@@ -47,10 +64,12 @@ public:
 
 	FOnStartComboDelegate OnStartCombo;
 	FOnNextComboCheckDelegate OnNextComboCheck;
+	FOnShotTriggeredDelegate OnShotTriggered;
 
 	UPROPERTY(BlueprintAssignable, VisibleAnywhere, BlueprintCallable, Category = "Attack")
 	FOnComboHitCheckDelegate OnComboHitCheck;
 
 private:
 	FName getComboNontageSectionName(int32 currCombo);
+
 };
