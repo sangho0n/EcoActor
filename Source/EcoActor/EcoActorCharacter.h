@@ -63,6 +63,8 @@ protected:
 
 	void AttackWithGunStop();
 
+	void QPressed();
+
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -75,6 +77,9 @@ private:
 		ShotMode
 	};
 	bool hasInitialized = false;
+	TSubclassOf<UUserWidget> MenuWidgetClass;
+	UUserWidget* MenuWidget;
+
 public:
 	void setPlayerMode(EGameMode gameMode);
 

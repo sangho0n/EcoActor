@@ -9,6 +9,7 @@
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "EcoActorCharacterAnimInstance.h"
+#include "UserWidget.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AEcoActorCharacter
@@ -83,6 +84,12 @@ AEcoActorCharacter::AEcoActorCharacter()
 	Gun->SetVisibility(false);
 
 	hasInitialized = true;
+
+	static ConstructorHelpers::FClassFinder<UUserWidget> MENU_UI(TEXT("/Game/Level2/OceanCleaning/BP_Menu.BP_Menu_C"));
+	if (MENU_UI.Succeeded())
+	{
+		MenuWidgetClass = MENU_UI.Class;
+	}
 }
 
 void AEcoActorCharacter::BeginPlay()
@@ -187,6 +194,8 @@ void AEcoActorCharacter::SetupPlayerInputComponent(class UInputComponent* Player
 	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &AEcoActorCharacter::Attack);
 	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &AEcoActorCharacter::AttackWithGunStart);
 	PlayerInputComponent->BindAction("Attack", IE_Released, this, &AEcoActorCharacter::AttackWithGunStop);
+
+	PlayerInputComponent->BindAction("Quit", IE_Pressed, this, &AEcoActorCharacter::QPressed);
 }
 
 void AEcoActorCharacter::Jump()
@@ -340,4 +349,19 @@ void AEcoActorCharacter::Equip()
 	Gun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocket);
 	bIsEquipped = true;
 	LeftBullets = MaxBullets;
+}
+
+void AEcoActorCharacter::QPressed()
+{
+	MenuWidget = CreateWidget(GetWorld(), MenuWidgetClass);
+	if (IsValid(MenuWidget))
+	{
+		auto palyerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+		MenuWidget->AddToViewport();
+
+		palyerController->SetInputMode(FInputModeUIOnly());
+		palyerController->bShowMouseCursor = true;
+		palyerController->bEnableClickEvents = true;
+		palyerController->bEnableMouseOverEvents = true;
+	}
 }
