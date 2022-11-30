@@ -81,6 +81,8 @@ AEcoActorCharacter::AEcoActorCharacter()
 	}
 
 	Gun->SetVisibility(false);
+
+	hasInitialized = true;
 }
 
 void AEcoActorCharacter::BeginPlay()
@@ -142,7 +144,10 @@ void AEcoActorCharacter::setPlayerMode(EGameMode newGameMode)
 		CameraBoom->bInheritRoll = true;
 		CameraBoom->TargetArmLength = 300.0f; // The camera follows at this distance behind the character	
 		CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
-		FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
+		if(!hasInitialized)
+			FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
+		else
+			FollowCamera->AttachTo(CameraBoom, USpringArmComponent::SocketName);
 		FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 		break;
 	case EGameMode::ShotMode:
@@ -157,7 +162,10 @@ void AEcoActorCharacter::setPlayerMode(EGameMode newGameMode)
 		CameraBoom->bInheritRoll = true;
 		CameraBoom->TargetArmLength = 30.0f;
 		CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
-		FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
+		if (!hasInitialized)
+			FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
+		else
+			FollowCamera->AttachTo(CameraBoom, USpringArmComponent::SocketName);
 		FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 		break;
 	}
@@ -183,7 +191,7 @@ void AEcoActorCharacter::SetupPlayerInputComponent(class UInputComponent* Player
 
 void AEcoActorCharacter::Jump()
 {
-	if (bHoldKeyControl) return;
+	if (bHoldKeyControl || bIsEquipping) return;
 	Super::Jump();
 }
 
@@ -195,6 +203,8 @@ void AEcoActorCharacter::LookUpAtRate(float Rate)
 
 void AEcoActorCharacter::MoveForward(float Value)
 {
+	if (bIsEquipping) return;
+
 	if ((Controller != NULL) && (Value != 0.0f))
 	{
 		if (bHoldKeyControl) return;
@@ -210,6 +220,8 @@ void AEcoActorCharacter::MoveForward(float Value)
 
 void AEcoActorCharacter::MoveRight(float Value)
 {
+	if (bIsEquipping) return;
+
 	if ( (Controller != NULL) && (Value != 0.0f) )
 	{
 		if (bHoldKeyControl) return;

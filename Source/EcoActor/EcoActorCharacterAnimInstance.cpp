@@ -59,6 +59,18 @@ void UEcoActorCharacterAnimInstance::AnimNotify_NextComboCheck()
 	OnNextComboCheck.Broadcast();
 }
 
+void UEcoActorCharacterAnimInstance::AnimNotify_EquipStart()
+{
+	bIsEquipping = true;
+	LOG(Warning, TEXT("equip start"));
+}
+void UEcoActorCharacterAnimInstance::AnimNotify_EquipEnd()
+{
+	bIsEquipping = false;
+	LOG(Warning, TEXT("equip end"));
+}
+
+
 void UEcoActorCharacterAnimInstance::PlayComboMontage()
 {
 	if (!Montage_IsPlaying(FullCombo))

@@ -24,6 +24,10 @@ public:
 	static const FName PatrolPosKey;
 
 	static const FName RandomWaitTimeKey;
+	
+	static const FName RunAwayFromKey;
+
+	static const FName RunAwayPosKey;
 
 private:
 	UPROPERTY()

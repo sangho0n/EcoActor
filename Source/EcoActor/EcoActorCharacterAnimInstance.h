@@ -41,6 +41,12 @@ private:
 	UFUNCTION()
 	void AnimNotify_ShotTriggered();
 
+	UFUNCTION()
+	void AnimNotify_EquipStart();
+
+	UFUNCTION()
+	void AnimNotify_EquipEnd();
+
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category=Attack, Meta=(AllowPrivateAccess=true))
 	UAnimMontage* FullCombo;
 

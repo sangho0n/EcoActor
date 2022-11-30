@@ -74,6 +74,7 @@ private:
 		ThirdPerson,
 		ShotMode
 	};
+	bool hasInitialized = false;
 public:
 	void setPlayerMode(EGameMode gameMode);
 

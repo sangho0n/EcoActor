@@ -9,6 +9,8 @@
 const FName AAnimalAIController::HomePosKey(TEXT("HomePos"));
 const FName AAnimalAIController::PatrolPosKey(TEXT("PatrolPos"));
 const FName AAnimalAIController::RandomWaitTimeKey(TEXT("RandomWaitTime"));
+const FName AAnimalAIController::RunAwayFromKey(TEXT("RunAwayFrom"));
+const FName AAnimalAIController::RunAwayPosKey(TEXT("RunAwayPos"));
 
 AAnimalAIController::AAnimalAIController()
 {
@@ -23,7 +25,6 @@ AAnimalAIController::AAnimalAIController()
 	{
 		BTAsset = BTobj.Object;
 	}
-
 }
 
 void AAnimalAIController::OnPossess(APawn* InPawn)

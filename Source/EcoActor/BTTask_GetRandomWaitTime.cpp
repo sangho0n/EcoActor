@@ -3,6 +3,7 @@
 
 #include "BTTask_GetRandomWaitTime.h"
 #include "AnimalAIController.h"
+#include "HunterAiController.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
 
@@ -21,7 +22,11 @@ EBTNodeResult::Type UBTTask_GetRandomWaitTime::ExecuteTask(UBehaviorTreeComponen
 	auto ControllingPawn = OwnerCompoent.GetAIOwner()->GetPawn();
 	if (nullptr == ControllingPawn) return EBTNodeResult::Failed;
 	
-	OwnerCompoent.GetBlackboardComponent()->SetValueAsFloat(AAnimalAIController::RandomWaitTimeKey, FMath::RandRange(0.0f, 5.0f));
+
+	if(ControllingPawn->GetName().Contains(TEXT("Hunter")))
+		OwnerCompoent.GetBlackboardComponent()->SetValueAsFloat(AHunterAiController::RandomWaitTimeKey, FMath::RandRange(0.0f, 5.0f));
+	else
+		OwnerCompoent.GetBlackboardComponent()->SetValueAsFloat(AAnimalAIController::RandomWaitTimeKey, FMath::RandRange(0.0f, 5.0f));
 
 	return result;
 }
