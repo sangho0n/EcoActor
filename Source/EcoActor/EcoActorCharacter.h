@@ -103,7 +103,11 @@ private:
 	class UEcoActorCharacterAnimInstance* AnimInstance;
 protected:
 	UFUNCTION()
-	void ComboHit();
+	void Hit();
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category=Attack, Meta=(AllowPrivateAccess=true))
+	float HitRange;
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	float HitRadius;
 
 private:
 	UFUNCTION()

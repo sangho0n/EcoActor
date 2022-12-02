@@ -10,6 +10,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "EcoActorCharacterAnimInstance.h"
 #include "UserWidget.h"
+#include "DrawDebugHelpers.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AEcoActorCharacter
@@ -70,6 +71,8 @@ AEcoActorCharacter::AEcoActorCharacter()
 	bIsAttacking = false;
 	bHoldKeyControl = false;
 	TargetPoint = FVector::ZeroVector;
+	HitRange = 200.0f;
+	HitRadius = 50.0f;
 
 	LeftBullets = MaxBullets; 
 	Gun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Gun")); 
@@ -129,7 +132,7 @@ void AEcoActorCharacter::PostInitializeComponents()
 		TargetPoint = CurrPoint + Direction * 300.0f;
 		});
 
-	AnimInstance->OnComboHitCheck.AddDynamic(this, &AEcoActorCharacter::ComboHit);
+	AnimInstance->OnComboHitCheck.AddDynamic(this, &AEcoActorCharacter::Hit);
 
 	AnimInstance->OnShotTriggered.AddDynamic(this, &AEcoActorCharacter::Shot);
 }
@@ -322,9 +325,52 @@ void AEcoActorCharacter::OnComboMontageEnded(UAnimMontage* Mont, bool bInteruppe
 	currentCombo = 0;
 }
 
-void AEcoActorCharacter::ComboHit()
+void AEcoActorCharacter::Hit()
 {
+	auto ForwardVec = GetActorForwardVector();
+	FHitResult HitResult;
+	FCollisionQueryParams Params(NAME_None, false, this);
+	bool bResult = GetWorld()->SweepSingleByChannel(
+		HitResult,
+		GetActorLocation(),
+		GetActorLocation() + ForwardVec * HitRange,
+		FQuat::Identity,
+		ECollisionChannel::ECC_GameTraceChannel1,
+		FCollisionShape::MakeSphere(HitRadius),
+		Params
+	);
 
+
+#if ENABLE_DRAW_DEBUG
+	auto TraceVec = ForwardVec * HitRange;
+	if (bResult)
+	{
+		DrawDebugCapsule(
+			GetWorld(),
+			GetActorLocation() + TraceVec * 0.5f,
+			TraceVec.Size()*0.5f,
+			HitRadius,
+			FRotationMatrix::MakeFromZ(TraceVec).ToQuat(),
+			FColor::Red,
+			false,
+			3.0f
+		);
+	}
+	else
+	{
+		DrawDebugCapsule(
+			GetWorld(),
+			GetActorLocation() + TraceVec * 0.5f,
+			TraceVec.Size() * 0.5f,
+			HitRadius,
+			FRotationMatrix::MakeFromZ(TraceVec).ToQuat(),
+			FColor::Green,
+			false,
+			3.0f
+		);
+
+	}
+#endif
 }
 
 bool AEcoActorCharacter::isEquipped()
