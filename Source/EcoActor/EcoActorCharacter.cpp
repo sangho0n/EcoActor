@@ -11,6 +11,7 @@
 #include "EcoActorCharacterAnimInstance.h"
 #include "UserWidget.h"
 #include "DrawDebugHelpers.h"
+#include "Kismet/KismetMathLibrary.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AEcoActorCharacter
@@ -36,8 +37,8 @@ AEcoActorCharacter::AEcoActorCharacter()
 	}
 
 	// set our turn rates for input
-	BaseTurnRate = 45.f;
-	BaseLookUpRate = 45.f;
+	BaseTurnRate = 75.f;
+	BaseLookUpRate = 75.f;
 
 	// Configure character movement
 	GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
@@ -191,8 +192,8 @@ void AEcoActorCharacter::SetupPlayerInputComponent(class UInputComponent* Player
 	PlayerInputComponent->BindAxis("MoveRight", this, &AEcoActorCharacter::MoveRight);
 
 	// "turn" handles devices that provide an absolute delta, such as a mouse.
-	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
-	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
+	PlayerInputComponent->BindAxis("Turn", this, &AEcoActorCharacter::TurnAtRate);
+	PlayerInputComponent->BindAxis("LookUp", this, &AEcoActorCharacter::LookUpAtRate);
 
 	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &AEcoActorCharacter::Attack);
 	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &AEcoActorCharacter::AttackWithGunStart);
@@ -211,6 +212,11 @@ void AEcoActorCharacter::LookUpAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+}
+
+void AEcoActorCharacter::TurnAtRate(float Rate)
+{
+	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
 }
 
 void AEcoActorCharacter::MoveForward(float Value)
@@ -327,7 +333,7 @@ void AEcoActorCharacter::OnComboMontageEnded(UAnimMontage* Mont, bool bInteruppe
 
 void AEcoActorCharacter::Hit()
 {
-	auto ForwardVec = GetActorForwardVector();
+	FVector ForwardVec = GetActorForwardVector();
 	FHitResult HitResult;
 	FCollisionQueryParams Params(NAME_None, false, this);
 	bool bResult = GetWorld()->SweepSingleByChannel(
@@ -340,9 +346,11 @@ void AEcoActorCharacter::Hit()
 		Params
 	);
 
+	//if(bResult) 헌터 스테이트 구현 후 구현
 
 #if ENABLE_DRAW_DEBUG
-	auto TraceVec = ForwardVec * HitRange;
+	FVector TraceVec = ForwardVec * HitRange;
+
 	if (bResult)
 	{
 		DrawDebugCapsule(
@@ -382,6 +390,61 @@ void AEcoActorCharacter::Shot()
 {
 	LeftBullets--;
 	LOG(Warning, TEXT("Bullet left : %d"), LeftBullets);
+
+	FVector CameraVec = FollowCamera->GetComponentLocation();
+	FVector LookAtVec = GetControlRotation().Vector();
+	LookAtVec.Normalize();
+	
+	FHitResult HitResult;
+	FCollisionQueryParams Params(NAME_None, false, this);
+	bool bResult = GetWorld()->LineTraceSingleByChannel(
+		HitResult,
+		CameraVec,
+		CameraVec + LookAtVec * ShottableDistance,
+		ECollisionChannel::ECC_GameTraceChannel1,
+		Params
+	);
+
+	
+
+	if (bResult)
+	{
+		// get target location
+		FVector TargetLocation = HitResult.ImpactPoint;
+		// and make vertical circle
+		float DistanceToTarget = HitResult.Distance;
+		float CircleRadius = DistanceToTarget * 0.03f;
+		// get random point from radius and angle
+		float RandomRadius = FMath::FRand() * CircleRadius;
+		FVector RandomAngleVector = FMath::VRand();
+
+		FVector RandomPointInWorld = CameraVec + LookAtVec * DistanceToTarget + RandomAngleVector*RandomRadius;
+		// linetrace to that point
+		if (bResult)
+		{
+			// shot to hunter
+		}
+
+#if ENABLE_DRAW_DEBUG
+		DrawDebugSphere(
+			GetWorld(),
+			CameraVec + LookAtVec*DistanceToTarget,
+			CircleRadius,
+			12,
+			bResult ? FColor::Red : FColor::Green,
+			false,
+			0.7f
+		); 
+		DrawDebugLine(
+			GetWorld(),
+			CameraVec,
+			CameraVec + LookAtVec * ShottableDistance,
+			FColor::Blue,
+			false,
+			5.0f
+		);
+#endif
+	}
 }
 
 void AEcoActorCharacter::Equip()

@@ -119,6 +119,7 @@ private:
 	const int32 MaxBullets = 20;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category=Gun, Meta=(AllowPrivateAccess=true))
 	bool bIsEquipping;
+	const float ShottableDistance = 3000.0f;
 
 	UFUNCTION()
 	void Shot();
