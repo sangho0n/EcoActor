@@ -346,7 +346,13 @@ void AEcoActorCharacter::Hit()
 		Params
 	);
 
-	//if(bResult) 헌터 스테이트 구현 후 구현
+	if (bResult)
+	{
+		FDamageEvent DamageEvent;
+		HitResult.Actor->TakeDamage(HitDamage, DamageEvent, GetController(), this);
+
+		OnValidAttack.Broadcast();
+	}
 
 #if ENABLE_DRAW_DEBUG
 	FVector TraceVec = ForwardVec * HitRange;
@@ -391,8 +397,8 @@ void AEcoActorCharacter::Shot()
 	LeftBullets--;
 	LOG(Warning, TEXT("Bullet left : %d"), LeftBullets);
 
-	FVector CameraVec = FollowCamera->GetComponentLocation();
-	FVector LookAtVec = GetControlRotation().Vector();
+	FVector CameraVec = FollowCamera->GetComponentLocation(); // cast ray from camera
+	FVector LookAtVec = GetControlRotation().Vector(); // to look at point(center of monitor)
 	LookAtVec.Normalize();
 	
 	FHitResult HitResult;
@@ -405,8 +411,6 @@ void AEcoActorCharacter::Shot()
 		Params
 	);
 
-	
-
 	if (bResult)
 	{
 		// get target location
@@ -416,24 +420,40 @@ void AEcoActorCharacter::Shot()
 		float CircleRadius = DistanceToTarget * 0.03f;
 		// get random point from radius and angle
 		float RandomRadius = FMath::FRand() * CircleRadius;
-		FVector RandomAngleVector = FMath::VRand();
+		float RandomAngle = FMath::FRand() * 360.0f;
+		FVector HittedActorUpVec = HitResult.GetActor()->GetActorUpVector();
+		FVector RandomAngleVector = HittedActorUpVec.RotateAngleAxis(RandomAngle, LookAtVec);
 
-		FVector RandomPointInWorld = CameraVec + LookAtVec * DistanceToTarget + RandomAngleVector*RandomRadius;
+		FVector RandomPointInWorld = CameraVec + LookAtVec * DistanceToTarget + RandomAngleVector * RandomRadius;
 		// linetrace to that point
+		bResult = GetWorld()->LineTraceSingleByChannel(
+			HitResult,
+			CameraVec,
+			RandomPointInWorld + LookAtVec*3.0f,
+			ECollisionChannel::ECC_GameTraceChannel1,
+			Params
+		);
 		if (bResult)
 		{
-			// shot to hunter
+			FDamageEvent DamageEvent;
+			HitResult.Actor->TakeDamage(ShotDamage, DamageEvent, GetController(), this);
+
+			OnValidAttack.Broadcast();
 		}
 
 #if ENABLE_DRAW_DEBUG
-		DrawDebugSphere(
+		DrawDebugCircle(
 			GetWorld(),
 			CameraVec + LookAtVec*DistanceToTarget,
 			CircleRadius,
-			12,
+			16,
 			bResult ? FColor::Red : FColor::Green,
 			false,
-			0.7f
+			0.7f,
+			0U,
+			0.0f,
+			GetActorRightVector(),
+			GetActorUpVector()
 		); 
 		DrawDebugLine(
 			GetWorld(),

@@ -26,11 +26,26 @@ public:
 
 	static const FName DetectedAnimalPosKey;
 
-	virtual void OnPossess(APawn* InPawn);
+	static const FName WasAttackedKey;
+
+	static const FName PlayerPosKey;
+
+	virtual void BeginPlay() override;
+
+	virtual void PostInitializeComponents() override;
+
+	virtual void OnPossess(APawn* InPawn) override;
+
+	virtual void Tick(float DeltaSeconds) override;
 
 private:
 	UPROPERTY()
 	class UBlackboardData* BBAsset;
 	UPROPERTY()
 	class UBehaviorTree* BTAsset;
+
+	class AHunter* ControlledPawn;
+
+public:
+	class AEcoActorCharacter* Player;
 };

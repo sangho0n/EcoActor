@@ -5,6 +5,8 @@
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardData.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Hunter.h"
+#include "Kismet/GameplayStatics.h"
 
 AHunterAiController::AHunterAiController()
 {
@@ -18,6 +20,7 @@ AHunterAiController::AHunterAiController()
 	{
 		BBAsset = BB.Object;
 	}
+
 }
 
 const FName AHunterAiController::HomePosKey(TEXT("HomePos"));
@@ -25,6 +28,42 @@ const FName AHunterAiController::PatrolPosKey(TEXT("PatrolPos"));
 const FName AHunterAiController::RandomWaitTimeKey(TEXT("RandomWaitTime"));
 const FName AHunterAiController::DetectedAnimalKey(TEXT("DetectedAnimal"));
 const FName AHunterAiController::DetectedAnimalPosKey(TEXT("DetectedAnimalPos"));
+const FName AHunterAiController::WasAttackedKey(TEXT("WasAttacked")); 
+const FName AHunterAiController::PlayerPosKey(TEXT("PlayerPos"));
+
+void AHunterAiController::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+}
+
+void AHunterAiController::BeginPlay()
+{
+	Super::BeginPlay();
+
+	ControlledPawn = Cast<AHunter>(this->GetPawn());
+	Player = Cast<AEcoActorCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	if (IsValid(Player))
+	{
+		Player->OnValidAttack.AddLambda([this]() -> void {
+			LOG(Warning, TEXT("hunter ai controller begin play add lambda"));
+			ControlledPawn->SetAttacked();
+			this->GetBlackboardComponent()->SetValueAsBool(AHunterAiController::WasAttackedKey, ControlledPawn->GetAttacked());
+			this->GetBlackboardComponent()->SetValueAsVector(AHunterAiController::PlayerPosKey, Player->GetActorLocation());
+			});
+	}
+
+	auto ControlledPawn = Cast<AHunter>(this->GetPawn());
+	ControlledPawn->SetPlayer();
+
+}
+
+void AHunterAiController::Tick(float DeltaSeconds)
+{
+	if (ControlledPawn->GetAttacked())
+	{
+		this->GetBlackboardComponent()->SetValueAsVector(AHunterAiController::PlayerPosKey, Player->GetActorLocation());
+	}
+}
 
 void AHunterAiController::OnPossess(APawn* InPawn)
 {
@@ -32,7 +71,11 @@ void AHunterAiController::OnPossess(APawn* InPawn)
 	if (UseBlackboard(BBAsset, Blackboard))
 	{
 		Blackboard->SetValueAsVector(HomePosKey, InPawn->GetActorLocation());
-		if (!RunBehaviorTree(BTAsset))
+		if (RunBehaviorTree(BTAsset))
+		{
+			LOG(Warning, TEXT("can run bb and bt"));
+		}
+		else
 		{
 			LOG(Warning, TEXT("Cannot run bb and bt"));
 		}

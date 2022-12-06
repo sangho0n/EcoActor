@@ -4,6 +4,7 @@
 #include "Hunter.h"
 #include "HunterAiController.h"
 #include "HunterAnimInstance.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AHunter::AHunter()
@@ -52,13 +53,19 @@ AHunter::AHunter()
 
 	AIControllerClass = AHunterAiController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+	bAttacked = false;
 }
 
 // Called when the game starts or when spawned
 void AHunter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+}
+
+void AHunter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
 }
 
 // Called every frame
@@ -66,4 +73,34 @@ void AHunter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+float AHunter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser)
+{
+	float FinalDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+	LOG(Warning, TEXT("Hunter Took Damget : %f"), DamageAmount);
+
+	return FinalDamage;
+}
+
+void AHunter::SetPlayer()
+{
+	Player = Cast<AEcoActorCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	if (IsValid(Player))
+	{
+		Player->OnValidAttack.AddLambda([this]() -> void {
+
+			});
+	}
+}
+
+bool AHunter::GetAttacked()
+{
+	return bAttacked;
+}
+
+void AHunter::SetAttacked()
+{
+	bAttacked = true;
 }

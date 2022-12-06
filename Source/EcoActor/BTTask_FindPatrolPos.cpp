@@ -24,7 +24,7 @@ EBTNodeResult::Type UBTTask_FindPatrolPos::ExecuteTask(UBehaviorTreeComponent& O
 	if (nullptr == NavSys) return EBTNodeResult::Failed;
 
 	FVector origin;
-	if(ControllingPawn->GetName().Contains(TEXT("Hunter")))
+	if (ControllingPawn->GetName().Contains(TEXT("Hunter")))
 		origin = OwnerCompoent.GetBlackboardComponent()->GetValueAsVector(AHunterAiController::HomePosKey);
 	else
 		origin = OwnerCompoent.GetBlackboardComponent()->GetValueAsVector(AAnimalAIController::HomePosKey);

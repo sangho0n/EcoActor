@@ -6,6 +6,8 @@
 #include "GameFramework/Character.h"
 #include "EcoActorCharacter.generated.h"
 
+DECLARE_MULTICAST_DELEGATE(FOnCharacterDoValidAttack);
+
 UCLASS(config=Game)
 class AEcoActorCharacter : public ACharacter
 {
@@ -89,6 +91,8 @@ public:
 
 	void SetIsEquipping(bool newvalue);
 
+	FOnCharacterDoValidAttack OnValidAttack;
+
 private:
 	// combo ฐüทร
 	int32 currentCombo;
@@ -99,6 +103,7 @@ private:
 	bool bIsEquipped;
 	bool bHoldKeyControl;
 	FVector TargetPoint;
+	const float HitDamage = 5.0f;
 
 	class UEcoActorCharacterAnimInstance* AnimInstance;
 protected:
@@ -116,10 +121,11 @@ private:
 private:
 	// gun
 	int32 LeftBullets;
-	const int32 MaxBullets = 20;
+	const int32 MaxBullets = 100;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category=Gun, Meta=(AllowPrivateAccess=true))
 	bool bIsEquipping;
 	const float ShottableDistance = 3000.0f;
+	const float ShotDamage = 10.0f;
 
 	UFUNCTION()
 	void Shot();

@@ -4,6 +4,7 @@
 
 #include "EcoActor.h"
 #include "GameFramework/Character.h"
+#include "EcoActorCharacter.h"
 #include "Hunter.generated.h"
 
 UCLASS()
@@ -20,8 +21,19 @@ protected:
 	virtual void BeginPlay() override;
 
 public:	
+
+	virtual void PostInitializeComponents() override;
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
+private:
+	class AEcoActorCharacter* Player;
+	bool bAttacked;
+
+public:
+	void SetPlayer();
+	bool GetAttacked();
+	void SetAttacked();
 };
