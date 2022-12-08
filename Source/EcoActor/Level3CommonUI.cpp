@@ -22,7 +22,10 @@ void ULevel3CommonUI::NativeConstruct()
 	Img_Fist_C = Cast<UImage>(GetWidgetFromName(TEXT("Img_Fist")));
 	Img_Bullet_C = Cast<UImage>(GetWidgetFromName(TEXT("Img_Bullet")));
 	Img_Aim_C = Cast<UImage>(GetWidgetFromName(TEXT("Img_Aim")));
+	TEXT_TimeLeft_C = Cast<UTextBlock>(GetWidgetFromName(TEXT("TEXT_TimeLeft")));
 	UpdateHPBar();
+
+	min = 10; sec = 1;
 }
 
 void ULevel3CommonUI::UpdateHPBar()
@@ -66,4 +69,25 @@ void ULevel3CommonUI::SetGunMode()
 void ULevel3CommonUI::UpdateLeftBullet(int32 left, const int32 max)
 {
 	TEXT_LEFT_C->SetText(FText::FromString(FString::FromInt(left) + TEXT(" / ") + FString::FromInt(max)));
+}
+
+void ULevel3CommonUI::PlayTimer()
+{
+	FTimerHandle TimerHandle;
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &ULevel3CommonUI::UpdateLeftTime, 1.0f, true);
+}
+
+void ULevel3CommonUI::UpdateLeftTime()
+{
+	sec--;
+	if (sec < 0)
+	{
+		min--;
+		sec = 59;
+	}
+	if (min < 0)
+	{
+		// broadcast on time's up
+	}
+	TEXT_TimeLeft_C->SetText(FText::FromString(FString::FromInt(min) + TEXT(":") + FString::FromInt(sec)));
 }

@@ -206,6 +206,7 @@ void AEcoActorCharacter::SetCharacterState(ECharacterState NewState)
 		PlayerController->bEnableClickEvents = false;
 		PlayerController->bEnableMouseOverEvents = false;
 		bCanBeDamaged = true;
+		CommonUI->PlayTimer();
 
 		break;
 	}

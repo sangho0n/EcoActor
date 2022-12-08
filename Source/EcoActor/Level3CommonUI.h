@@ -33,10 +33,18 @@ private:
 	class UImage* Img_Fist_C;
 	class UImage* Img_Bullet_C;
 	class UImage* Img_Aim_C;
+	class UTextBlock* TEXT_TimeLeft_C;
 
 public:
 	void SetFistMode();
 	void SetGunMode();
 	void UpdateLeftBullet(int32 leftBullet, const int32 maxBullet);
 	void UpdateScore();
+	void UpdateLeftTime();
+public:
+	void PlayTimer();
+
+private:
+	int32 min;
+	int32 sec;
 };
