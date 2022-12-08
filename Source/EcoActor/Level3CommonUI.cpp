@@ -32,7 +32,17 @@ void ULevel3CommonUI::UpdateHPBar()
 		if (nullptr != PB_HP_C)
 		{
 			PB_HP_C->SetPercent(CurrentCharStat->GetHPRatio());
-			LOG(Warning, TEXT("curr : %f max : %f"), CurrentCharStat->GetCurrentHP(), CurrentCharStat->GetMaxHP());
+		}
+	}
+}
+
+void ULevel3CommonUI::UpdateScore()
+{
+	if (CurrentCharStat.IsValid())
+	{
+		if (nullptr != TEXT_SCORE_C)
+		{
+			TEXT_SCORE_C->SetText(FText::FromString(TEXT("Score : ") + FString::FromInt(CurrentCharStat->GetScore())));
 		}
 	}
 }

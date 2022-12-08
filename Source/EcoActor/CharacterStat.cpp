@@ -11,6 +11,7 @@ UCharacterStat::UCharacterStat()
 	PrimaryComponentTick.bCanEverTick = false;
 	bWantsInitializeComponent = true;
 	bIsDead = false;
+	Score = 0;
 }
 
 
@@ -20,6 +21,7 @@ void UCharacterStat::BeginPlay()
 	Super::BeginPlay();
 
 	SetHP(MaxHP);
+	Score = 0;
 }
 
 void UCharacterStat::InitializeComponent()
@@ -68,4 +70,15 @@ float UCharacterStat::GetCurrentHP()
 float UCharacterStat::GetMaxHP()
 {
 	return MaxHP;
+}
+
+void UCharacterStat::ScoreUp()
+{
+	Score++;
+	OnScoreChanged.Broadcast();
+}
+
+int64 UCharacterStat::GetScore()
+{
+	return Score;
 }

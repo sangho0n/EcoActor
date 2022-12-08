@@ -38,4 +38,5 @@ public:
 	void SetFistMode();
 	void SetGunMode();
 	void UpdateLeftBullet(int32 leftBullet, const int32 maxBullet);
+	void UpdateScore();
 };

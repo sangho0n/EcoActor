@@ -91,6 +91,46 @@ void AHunter::BeginPlay()
 		HPWidget->BindHunterStat(CharacterStat);
 	}
 
+	auto Player = Cast<AEcoActorCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	Player->OnCharacterStateChanged.AddDynamic(this, &AHunter::SetHunterState);
+}
+
+void AHunter::SetHunterState(ECharacterState NewState)
+{
+	if (NewState == ECharacterState::DEAD) return;
+
+	HunterState = NewState;
+
+	switch (HunterState) 
+	{
+	case ECharacterState::PREINIT:
+	{
+		bCanBeDamaged = false;
+		bIsDead = false;
+
+		break;
+	}
+	case ECharacterState::LOADING:
+	{
+		bCanBeDamaged = false;
+		bIsDead = false;
+		HPBarWidget->SetVisibility(false);
+		SetActorHiddenInGame(true);
+		Cast<AHunterAiController>(GetController())->StopAI();
+
+		break;
+	}
+	case ECharacterState::READY:
+	{
+		bCanBeDamaged = true;
+		bIsDead = false;
+		HPBarWidget->SetVisibility(true);
+		SetActorHiddenInGame(false);
+		Cast<AHunterAiController>(GetController())->RunAI();
+
+		break;
+	}
+	}
 }
 
 void AHunter::PostInitializeComponents()
@@ -130,12 +170,12 @@ float AHunter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageE
 void AHunter::SetPlayer()
 {
 	Player = Cast<AEcoActorCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-	if (IsValid(Player))
-	{
-		Player->OnValidAttack.AddLambda([this]() -> void {
-			//
-			});
-	}
+	//if (IsValid(Player))
+	//{
+	//	Player->OnValidAttack.AddLambda([this]() -> void {
+	//		//
+	//		});
+	//}
 }
 
 bool AHunter::GetAttacked()
@@ -202,6 +242,7 @@ void AHunter::Attack()
 //#endif
 }
 
+
 void AHunter::SetDead()
 {
 	GetCapsuleComponent()->SetCollisionProfileName(TEXT("IgnoreOnlyPawn"));
@@ -210,6 +251,9 @@ void AHunter::SetDead()
 	GetController()->Destroy();
 	AnimInstance->PlayDeadAnim();
 	HPBarWidget->SetVisibility(false);
+
+	auto Player = Cast<AEcoActorCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	Player->CharacterStat->ScoreUp();
 
 	FTimerHandle WaitHandle;
 	GetWorld()->GetTimerManager().SetTimer(WaitHandle, FTimerDelegate::CreateLambda([&]()

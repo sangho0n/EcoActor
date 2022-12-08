@@ -68,9 +68,13 @@ void AHunterAiController::Tick(float DeltaSeconds)
 void AHunterAiController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
+}
+
+void AHunterAiController::RunAI()
+{
 	if (UseBlackboard(BBAsset, Blackboard))
 	{
-		Blackboard->SetValueAsVector(HomePosKey, InPawn->GetActorLocation());
+		Blackboard->SetValueAsVector(HomePosKey, GetPawn()->GetActorLocation());
 		if (RunBehaviorTree(BTAsset))
 		{
 			LOG(Warning, TEXT("can run bb and bt"));
@@ -79,5 +83,14 @@ void AHunterAiController::OnPossess(APawn* InPawn)
 		{
 			LOG(Warning, TEXT("Cannot run bb and bt"));
 		}
+	}
+}
+
+void AHunterAiController::StopAI()
+{
+	auto BehaviorTreeComponent = Cast<UBehaviorTreeComponent>(BrainComponent);
+	if (nullptr != BehaviorTreeComponent)
+	{
+		BehaviorTreeComponent->StopTree();
 	}
 }

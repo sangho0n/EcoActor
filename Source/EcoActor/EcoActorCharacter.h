@@ -9,6 +9,7 @@
 #include "EcoActorCharacter.generated.h"
 
 DECLARE_MULTICAST_DELEGATE(FOnCharacterDoValidAttack);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterStateChanged, ECharacterState, NewState);
 
 UCLASS(config=Game)
 class AEcoActorCharacter : public ACharacter
@@ -34,8 +35,12 @@ public:
 
 	class UCharacterStat* CharacterStat;
 
+	UFUNCTION(BlueprintCallable, Category = State)
 	void SetCharacterState(ECharacterState NewState);
 	ECharacterState GetCharacterState() const;
+
+	FOnCharacterStateChanged OnCharacterStateChanged;
+
 private:
 	UPROPERTY(Transient, VisibleInstanceOnly, BlueprintReadOnly, Category = State, Meta=(AllowPrivateAccess = true))
 	ECharacterState CurrentState;
@@ -91,6 +96,9 @@ private:
 		ShotMode
 	};
 	bool hasInitialized = false;
+
+	TSubclassOf<UUserWidget> BackgroundStoryWidgetClass;
+	UUserWidget* BackgroundStoryWidget;
 
 	TSubclassOf<UUserWidget> CommonUIClass;
 	ULevel3CommonUI* CommonUI;

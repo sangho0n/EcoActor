@@ -48,4 +48,8 @@ private:
 
 private:
 	class AEcoActorCharacter* Player;
+
+public:
+	void RunAI();
+	void StopAI();
 };

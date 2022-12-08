@@ -9,6 +9,7 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHPIsZeroDelegate);
 DECLARE_MULTICAST_DELEGATE(FOnHPIsChangedDelegate);
+DECLARE_MULTICAST_DELEGATE(FOnScoreChangedDelegate);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class ECOACTOR_API UCharacterStat : public UActorComponent
@@ -43,4 +44,10 @@ private:
 	float CurrentHP;
 	float MaxHP;
 	bool bIsDead;
+	int64 Score;
+
+public:
+	void ScoreUp();
+	FOnScoreChangedDelegate OnScoreChanged;
+	int64 GetScore();
 };

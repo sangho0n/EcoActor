@@ -96,16 +96,22 @@ AEcoActorCharacter::AEcoActorCharacter()
 	hasInitialized = true;
 
 
-	ConstructorHelpers::FClassFinder<UUserWidget> COMMONUI(TEXT("/Game/Main/UI/BP_Level3CommonUI.BP_Level3CommonUI_C"));
+	static ConstructorHelpers::FClassFinder<UUserWidget> COMMONUI(TEXT("/Game/Main/UI/BP_Level3CommonUI.BP_Level3CommonUI_C"));
 	if (COMMONUI.Succeeded())
 	{
 		CommonUIClass = COMMONUI.Class;
 	}
 
-	static ConstructorHelpers::FClassFinder<UUserWidget> MENU_UI(TEXT("/Game/Level2/OceanCleaning/BP_Menu.BP_Menu_C"));
+	static ConstructorHelpers::FClassFinder<UUserWidget> MENU_UI(TEXT("/Game/Main/BP_Menu2.BP_Menu2_C"));
 	if (MENU_UI.Succeeded())
 	{
 		MenuWidgetClass = MENU_UI.Class;
+	}
+
+	static ConstructorHelpers::FClassFinder<UUserWidget> BG_UI(TEXT("/Game/Tutorial/Level3_BS/level3_BackgroundStory.level3_BackgroundStory_C"));
+	if (BG_UI.Succeeded())
+	{
+		BackgroundStoryWidgetClass = BG_UI.Class;
 	}
 	
 	//SetActorHiddenInGame(true);
@@ -113,6 +119,8 @@ AEcoActorCharacter::AEcoActorCharacter()
 	//CommonUI->SetVisibility(ESlateVisibility::Hidden);
 	bCanBeDamaged = true;
 	bIsDead = false;
+
+	SetCharacterState(ECharacterState::PREINIT);
 }
 
 void AEcoActorCharacter::BeginPlay()
@@ -130,11 +138,11 @@ void AEcoActorCharacter::BeginPlay()
 			// À§Á¬À» ºäÆ÷Æ®¿¡ Ãß°¡ÇÑ´Ù
 			CommonUI->AddToViewport();
 
-			auto palyerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-			palyerController->SetInputMode(FInputModeGameOnly());
-			palyerController->bShowMouseCursor = false;
-			palyerController->bEnableClickEvents = false;
-			palyerController->bEnableMouseOverEvents = false;
+			auto PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+			PlayerController->SetInputMode(FInputModeGameOnly());
+			PlayerController->bShowMouseCursor = false;
+			PlayerController->bEnableClickEvents = false;
+			PlayerController->bEnableMouseOverEvents = false;
 		}
 	}
 
@@ -142,9 +150,11 @@ void AEcoActorCharacter::BeginPlay()
 	CommonUI->SetFistMode();
 	CharacterStat->SetMaxHP(200.0f);
 
-	// Æ©Åä¸®¾ó À§Á¬ ºÒ·¯¿À±â
+	SetCharacterState(ECharacterState::LOADING);
 
-	//SetCharacterState(ECharacterState::LOADING);
+	CharacterStat->OnScoreChanged.AddLambda([this]()->void {
+		CommonUI->UpdateScore();
+		});
 }
 
 void AEcoActorCharacter::SetCharacterState(ECharacterState NewState)
@@ -153,24 +163,70 @@ void AEcoActorCharacter::SetCharacterState(ECharacterState NewState)
 
 	switch (CurrentState)
 	{
+	case ECharacterState::PREINIT:
+	{
+		bIsDead = false;
+		bCanBeDamaged = false;
+		break;
+	}
 	case ECharacterState::LOADING:
 	{
+		UGameplayStatics::SetGamePaused(GetWorld(), true);
+
 		SetActorHiddenInGame(true);
-		//CommonUI->SetVisibility(ESlateVisibility::Hidden);
+		CommonUI->SetVisibility(ESlateVisibility::Hidden);
 		bCanBeDamaged = false;
 		// todo : Æ©Åä¸®¾ó À§Á¬ ¶ç¿ì±â
+		BackgroundStoryWidget = CreateWidget(GetWorld(), BackgroundStoryWidgetClass);
+		if (IsValid(BackgroundStoryWidget))
+		{
+			auto PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+			BackgroundStoryWidget->AddToViewport();
+
+
+			PlayerController->SetInputMode(FInputModeUIOnly());
+			PlayerController->bShowMouseCursor = true;
+			PlayerController->bEnableClickEvents = true;
+			PlayerController->bEnableMouseOverEvents = true;
+		}
 		break;
 	}
 	case ECharacterState::READY:
 	{
-		// todo : Æ©Åä¸®¾ó À§Á¬ Á¦°Å
+		UGameplayStatics::SetGamePaused(GetWorld(), false);
+
+		auto PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 		SetActorHiddenInGame(false);
-		//CommonUI->SetVisibility(ESlateVisibility::Visible);
+		CommonUI->SetVisibility(ESlateVisibility::Visible);
+
+		PlayerController->SetPause(false);
+		PlayerController->SetInputMode(FInputModeGameOnly());
+		LOG(Warning, TEXT("ready"));
+		PlayerController->bShowMouseCursor = false;
+		PlayerController->bEnableClickEvents = false;
+		PlayerController->bEnableMouseOverEvents = false;
 		bCanBeDamaged = true;
 
-		//AEcoActorCharacterState->OnHPIsZero
+		break;
+	}
+	case ECharacterState::DEAD:
+	{
+		auto PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+		SetActorHiddenInGame(false);
+		PlayerController->SetPause(true);
+		PlayerController->SetInputMode(FInputModeUIOnly());
+		PlayerController->bShowMouseCursor = true;
+		PlayerController->bEnableClickEvents = true;
+		PlayerController->bEnableMouseOverEvents = true;
+		CommonUI->SetVisibility(ESlateVisibility::Hidden);
+		bCanBeDamaged = false;
+		bIsDead = true;
+
+		break;
 	}
 	}
+
+	OnCharacterStateChanged.Broadcast(CurrentState);
 }
 
 void AEcoActorCharacter::PostInitializeComponents()
@@ -576,21 +632,21 @@ void AEcoActorCharacter::Equip()
 
 void AEcoActorCharacter::QPressed()
 {
+	UGameplayStatics::SetGamePaused(GetWorld(), true);
 	MenuWidget = CreateWidget(GetWorld(), MenuWidgetClass);
 	if (IsValid(MenuWidget))
 	{
-		auto palyerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+		auto PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 		MenuWidget->AddToViewport();
 
-		palyerController->SetInputMode(FInputModeUIOnly());
-		palyerController->bShowMouseCursor = true;
-		palyerController->bEnableClickEvents = true;
-		palyerController->bEnableMouseOverEvents = true;
+		PlayerController->SetInputMode(FInputModeUIOnly());
+		PlayerController->bShowMouseCursor = true;
+		PlayerController->bEnableClickEvents = true;
+		PlayerController->bEnableMouseOverEvents = true;
 	}
 }
 
 void AEcoActorCharacter::SetDead()
 {
-	bIsDead = true;
-	bCanBeDamaged = false;
+	SetCharacterState(ECharacterState::DEAD);
 }

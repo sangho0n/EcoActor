@@ -35,7 +35,15 @@ private:
 	bool bAttacked;
 	class UHunterAnimInstance* AnimInstance;
 	class UCharacterStat* CharacterStat;
+public:
+private:
 	class UWidgetComponent* HPBarWidget;
+
+	// character State
+	ECharacterState HunterState;
+	UFUNCTION()
+	void SetHunterState(ECharacterState NewState);
+	
 
 public:
 	void SetPlayer();
