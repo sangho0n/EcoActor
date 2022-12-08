@@ -5,6 +5,8 @@
 #include "EcoActor.h"
 #include "GameFramework/Character.h"
 #include "EcoActorCharacter.h"
+#include "CharacterStat.h"
+#include "HunterAnimInstance.h"
 #include "Hunter.generated.h"
 
 UCLASS()
@@ -31,9 +33,19 @@ public:
 private:
 	class AEcoActorCharacter* Player;
 	bool bAttacked;
+	class UHunterAnimInstance* AnimInstance;
+	class UCharacterStat* CharacterStat;
 
 public:
 	void SetPlayer();
 	bool GetAttacked();
 	void SetAttacked();
+	UFUNCTION()
+	void Attack();
+
+private:
+	float AttackRange;
+	float AttackRadius;
+	float HunterAttackDamage;
+
 };

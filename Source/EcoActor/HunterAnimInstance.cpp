@@ -2,12 +2,28 @@
 
 
 #include "HunterAnimInstance.h"
+#include "EcoActorCharacter.h"
+#include "Kismet/GameplayStatics.h"
 
 UHunterAnimInstance::UHunterAnimInstance()
 {
 	CurrSpeed = 0.0f;
 	bIsHyperMode = false;
 	bIsAttacking = false;
+}
+
+void UHunterAnimInstance::NativeBeginPlay()
+{
+	Super::NativeBeginPlay();
+
+	Player = Cast<AEcoActorCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+
+	if (IsValid(Player))
+	{
+		Player->OnValidAttack.AddLambda([this]()->void {
+			bIsAttacking = true;
+			});
+	}
 }
 
 void UHunterAnimInstance::NativeUpdateAnimation(float deltaSeconds)
@@ -19,4 +35,9 @@ void UHunterAnimInstance::NativeUpdateAnimation(float deltaSeconds)
 	{
 		CurrSpeed = pawn->GetVelocity().Size();
 	}
+}
+
+void UHunterAnimInstance::AnimNotify_HunterAttack()
+{
+	OnHunterAttack.Broadcast();
 }

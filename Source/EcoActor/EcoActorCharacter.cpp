@@ -9,8 +9,9 @@
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "EcoActorCharacterAnimInstance.h"
+#include "EcoActorCharacterState.h"
 #include "UserWidget.h"
-#include "DrawDebugHelpers.h"
+//#include "DrawDebugHelpers.h"
 #include "Kismet/KismetMathLibrary.h"
 
 //////////////////////////////////////////////////////////////////////////
@@ -54,6 +55,10 @@ AEcoActorCharacter::AEcoActorCharacter()
 	// Create a follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 
+	// character stat component
+	CharacterStat = CreateDefaultSubobject<UCharacterStat>(TEXT("CharacterState"));
+	CharacterStat->SetMaxHP(200.0f);
+
 	// Animation
 	GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);
 	static ConstructorHelpers::FClassFinder<UAnimInstance> JUMP_AND_RUN_ANIM(TEXT("/Game/Main/Anim/Character/AnimBP_JumpRun.AnimBP_JumpRun_C"));
@@ -63,7 +68,7 @@ AEcoActorCharacter::AEcoActorCharacter()
 		LOG(Warning, TEXT("set aninm"));
 	}
 
-	setPlayerMode(EGameMode::ThirdPerson);
+	SetCameraMode(EGameMode::ThirdPerson);
 
 	currentCombo = 0;
 	bCanNextCombo = false;
@@ -79,6 +84,7 @@ AEcoActorCharacter::AEcoActorCharacter()
 	Gun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Gun")); 
 	bIsEquipping = false;
 
+
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> RIFLE(TEXT("/Game/MilitaryWeapDark/Weapons/Assault_Rifle_B.Assault_Rifle_B"));
 	if (RIFLE.Succeeded())
 	{
@@ -89,16 +95,81 @@ AEcoActorCharacter::AEcoActorCharacter()
 
 	hasInitialized = true;
 
+
+	ConstructorHelpers::FClassFinder<UUserWidget> COMMONUI(TEXT("/Game/Main/UI/BP_Level3CommonUI.BP_Level3CommonUI_C"));
+	if (COMMONUI.Succeeded())
+	{
+		CommonUIClass = COMMONUI.Class;
+	}
+
 	static ConstructorHelpers::FClassFinder<UUserWidget> MENU_UI(TEXT("/Game/Level2/OceanCleaning/BP_Menu.BP_Menu_C"));
 	if (MENU_UI.Succeeded())
 	{
 		MenuWidgetClass = MENU_UI.Class;
 	}
+	
+	//SetActorHiddenInGame(true);
+	SetActorHiddenInGame(false);
+	//CommonUI->SetVisibility(ESlateVisibility::Hidden);
+	bCanBeDamaged = false;
 }
 
 void AEcoActorCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+
+	if (IsValid(CommonUIClass))
+	{
+		// À§Á¬À» »ý¼ºÇÑ´Ù
+		CommonUI = Cast<ULevel3CommonUI>(CreateWidget(GetWorld(), CommonUIClass));
+
+		if (IsValid(CommonUI))
+		{
+			// À§Á¬À» ºäÆ÷Æ®¿¡ Ãß°¡ÇÑ´Ù
+			CommonUI->AddToViewport();
+
+			auto palyerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+			palyerController->SetInputMode(FInputModeGameOnly());
+			palyerController->bShowMouseCursor = false;
+			palyerController->bEnableClickEvents = false;
+			palyerController->bEnableMouseOverEvents = false;
+		}
+	}
+
+	CommonUI->BindCharacterStat(CharacterStat);
+	CommonUI->SetFistMode();
+	CharacterStat->SetMaxHP(200.0f);
+
+	// Æ©Åä¸®¾ó À§Á¬ ºÒ·¯¿À±â
+
+	//SetCharacterState(ECharacterState::LOADING);
+}
+
+void AEcoActorCharacter::SetCharacterState(ECharacterState NewState)
+{
+	CurrentState = NewState;
+
+	switch (CurrentState)
+	{
+	case ECharacterState::LOADING:
+	{
+		SetActorHiddenInGame(true);
+		//CommonUI->SetVisibility(ESlateVisibility::Hidden);
+		bCanBeDamaged = false;
+		// todo : Æ©Åä¸®¾ó À§Á¬ ¶ç¿ì±â
+		break;
+	}
+	case ECharacterState::READY:
+	{
+		// todo : Æ©Åä¸®¾ó À§Á¬ Á¦°Å
+		SetActorHiddenInGame(false);
+		//CommonUI->SetVisibility(ESlateVisibility::Visible);
+		bCanBeDamaged = true;
+
+		//AEcoActorCharacterState->OnHPIsZero
+	}
+	}
 }
 
 void AEcoActorCharacter::PostInitializeComponents()
@@ -136,9 +207,13 @@ void AEcoActorCharacter::PostInitializeComponents()
 	AnimInstance->OnComboHitCheck.AddDynamic(this, &AEcoActorCharacter::Hit);
 
 	AnimInstance->OnShotTriggered.AddDynamic(this, &AEcoActorCharacter::Shot);
+
+	CharacterStat->OnHPChanged.AddLambda([this]() -> void{
+		// hp º¯ÇÏµµ·Ï
+		});
 }
 
-void AEcoActorCharacter::setPlayerMode(EGameMode newGameMode)
+void AEcoActorCharacter::SetCameraMode(EGameMode newGameMode)
 {
 	switch (newGameMode)
 	{
@@ -284,7 +359,7 @@ void AEcoActorCharacter::AttackWithGunStart()
 
 	bIsAttacking = true;
 	GetCharacterMovement()->MaxWalkSpeed /= 2.0f;
-	setPlayerMode(EGameMode::ShotMode);
+	SetCameraMode(EGameMode::ShotMode);
 }
 
 void AEcoActorCharacter::AttackWithGunStop()
@@ -293,7 +368,7 @@ void AEcoActorCharacter::AttackWithGunStop()
 
 	bIsAttacking = false;
 	GetCharacterMovement()->MaxWalkSpeed *= 2.0f;
-	setPlayerMode(EGameMode::ThirdPerson);
+	SetCameraMode(EGameMode::ThirdPerson);
 }
 
 void AEcoActorCharacter::Tick(float deltaSeconds)
@@ -309,6 +384,7 @@ void AEcoActorCharacter::Tick(float deltaSeconds)
 		AttackWithGunStop();
 		bIsEquipped = false;
 		Gun->SetVisibility(false);
+		CommonUI->SetFistMode();
 	}
 }
 
@@ -354,37 +430,37 @@ void AEcoActorCharacter::Hit()
 		OnValidAttack.Broadcast();
 	}
 
-#if ENABLE_DRAW_DEBUG
-	FVector TraceVec = ForwardVec * HitRange;
-
-	if (bResult)
-	{
-		DrawDebugCapsule(
-			GetWorld(),
-			GetActorLocation() + TraceVec * 0.5f,
-			TraceVec.Size()*0.5f,
-			HitRadius,
-			FRotationMatrix::MakeFromZ(TraceVec).ToQuat(),
-			FColor::Red,
-			false,
-			3.0f
-		);
-	}
-	else
-	{
-		DrawDebugCapsule(
-			GetWorld(),
-			GetActorLocation() + TraceVec * 0.5f,
-			TraceVec.Size() * 0.5f,
-			HitRadius,
-			FRotationMatrix::MakeFromZ(TraceVec).ToQuat(),
-			FColor::Green,
-			false,
-			3.0f
-		);
-
-	}
-#endif
+//#if ENABLE_DRAW_DEBUG
+//	FVector TraceVec = ForwardVec * HitRange;
+//
+//	if (bResult)
+//	{
+//		DrawDebugCapsule(
+//			GetWorld(),
+//			GetActorLocation() + TraceVec * 0.5f,
+//			TraceVec.Size()*0.5f,
+//			HitRadius,
+//			FRotationMatrix::MakeFromZ(TraceVec).ToQuat(),
+//			FColor::Red,
+//			false,
+//			3.0f
+//		);
+//	}
+//	else
+//	{
+//		DrawDebugCapsule(
+//			GetWorld(),
+//			GetActorLocation() + TraceVec * 0.5f,
+//			TraceVec.Size() * 0.5f,
+//			HitRadius,
+//			FRotationMatrix::MakeFromZ(TraceVec).ToQuat(),
+//			FColor::Green,
+//			false,
+//			3.0f
+//		);
+//
+//	}
+//#endif
 }
 
 bool AEcoActorCharacter::isEquipped()
@@ -396,6 +472,7 @@ void AEcoActorCharacter::Shot()
 {
 	LeftBullets--;
 	LOG(Warning, TEXT("Bullet left : %d"), LeftBullets);
+	CommonUI->UpdateLeftBullet(LeftBullets, MaxBullets);
 
 	FVector CameraVec = FollowCamera->GetComponentLocation(); // cast ray from camera
 	FVector LookAtVec = GetControlRotation().Vector(); // to look at point(center of monitor)
@@ -441,30 +518,41 @@ void AEcoActorCharacter::Shot()
 			OnValidAttack.Broadcast();
 		}
 
-#if ENABLE_DRAW_DEBUG
-		DrawDebugCircle(
-			GetWorld(),
-			CameraVec + LookAtVec*DistanceToTarget,
-			CircleRadius,
-			16,
-			bResult ? FColor::Red : FColor::Green,
-			false,
-			0.7f,
-			0U,
-			0.0f,
-			GetActorRightVector(),
-			GetActorUpVector()
-		); 
-		DrawDebugLine(
-			GetWorld(),
-			CameraVec,
-			CameraVec + LookAtVec * ShottableDistance,
-			FColor::Blue,
-			false,
-			5.0f
-		);
-#endif
+//#if ENABLE_DRAW_DEBUG
+//		DrawDebugCircle(
+//			GetWorld(),
+//			CameraVec + LookAtVec*DistanceToTarget,
+//			CircleRadius,
+//			16,
+//			bResult ? FColor::Red : FColor::Green,
+//			false,
+//			0.7f,
+//			0U,
+//			0.0f,
+//			GetActorRightVector(),
+//			GetActorUpVector()
+//		); 
+//		DrawDebugLine(
+//			GetWorld(),
+//			CameraVec,
+//			CameraVec + LookAtVec * ShottableDistance,
+//			FColor::Blue,
+//			false,
+//			5.0f
+//		);
+//#endif
 	}
+}
+
+float AEcoActorCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	float FinalDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	FinalDamage = DamageAmount;
+
+	LOG(Warning, TEXT("player took dam : %f"), FinalDamage);
+	CharacterStat->SetDamage(FinalDamage);
+
+	return FinalDamage;
 }
 
 void AEcoActorCharacter::Equip()
@@ -478,6 +566,7 @@ void AEcoActorCharacter::Equip()
 	Gun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocket);
 	bIsEquipped = true;
 	LeftBullets = MaxBullets;
+	CommonUI->SetGunMode();
 }
 
 void AEcoActorCharacter::QPressed()
@@ -494,3 +583,4 @@ void AEcoActorCharacter::QPressed()
 		palyerController->bEnableMouseOverEvents = true;
 	}
 }
+

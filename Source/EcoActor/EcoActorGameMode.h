@@ -18,8 +18,6 @@ public:
 private:
 	void BeginPlay() override;
 
-	TSubclassOf<UUserWidget> CommonUIClass;
-	ULevel3CommonUI* CommonUI;
 };
 
 

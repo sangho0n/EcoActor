@@ -4,6 +4,15 @@
 
 #include "EngineMinimal.h"
 
+UENUM()
+enum class ECharacterState : uint8
+{
+	PREINIT,
+	LOADING,
+	READY,
+	DEAD
+};
+
 DECLARE_LOG_CATEGORY_EXTERN(EcoActor, Log, All);
 
 #define LOG_INFO (FString(__FUNCTION__) + TEXT("(") + FString::FromInt(__LINE__) + TEXT(")"))

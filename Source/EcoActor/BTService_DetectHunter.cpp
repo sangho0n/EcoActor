@@ -2,7 +2,7 @@
 #include "AnimalAIController.h"
 #include "Hunter.h"
 #include "BehaviorTree/BlackboardComponent.h"
-#include "DrawDebugHelpers.h"
+//#include "DrawDebugHelpers.h"
 
 
 UBTService_DetectHunter::UBTService_DetectHunter()
@@ -42,14 +42,18 @@ void UBTService_DetectHunter::TickNode(UBehaviorTreeComponent& OwnerComp, uint8*
 			if (nullptr != DetectedPawn)
 			{
 				OwnerComp.GetBlackboardComponent()->SetValueAsObject(AAnimalAIController::RunAwayFromKey, DetectedPawn);
-				DrawDebugSphere(World, CurrPos, DetectRadius, 16, FColor::Red, false, 0.2f);
-				DrawDebugPoint(World, DetectedPawn->GetActorLocation(), 10.0f, FColor::Red, false, 0.2f);
-				DrawDebugLine(World, CurrPos, DetectedPawn->GetActorLocation(), FColor::Red, false, 0.2f);
+//#if ENABLE_DRAW_DEBUG
+//				DrawDebugSphere(World, CurrPos, DetectRadius, 16, FColor::Red, false, 0.2f);
+//				DrawDebugPoint(World, DetectedPawn->GetActorLocation(), 10.0f, FColor::Red, false, 0.2f);
+//				DrawDebugLine(World, CurrPos, DetectedPawn->GetActorLocation(), FColor::Red, false, 0.2f);
+//#endif
 				return;
 			}
 		}
 	}
 
 	OwnerComp.GetBlackboardComponent()->SetValueAsObject(AAnimalAIController::RunAwayFromKey, nullptr);
-	DrawDebugSphere(World, CurrPos, DetectRadius, 16, FColor::Blue, false, 0.2f);
+//#if ENABLE_DRAW_DEBUG
+//	DrawDebugSphere(World, CurrPos, DetectRadius, 16, FColor::Blue, false, 0.2f);
+//#endif
 }

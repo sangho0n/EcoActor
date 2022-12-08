@@ -46,6 +46,6 @@ private:
 
 	class AHunter* ControlledPawn;
 
-public:
+private:
 	class AEcoActorCharacter* Player;
 };

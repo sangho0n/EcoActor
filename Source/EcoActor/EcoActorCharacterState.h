@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "EcoActor.h"
 #include "GameFramework/PlayerState.h"
 #include "EcoActorCharacterState.generated.h"
 

@@ -9,6 +9,9 @@
 /**
  * 
  */
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHunterAttackCheckDelegate);
+
 UCLASS()
 class ECOACTOR_API UHunterAnimInstance : public UAnimInstance
 {
@@ -16,6 +19,9 @@ class ECOACTOR_API UHunterAnimInstance : public UAnimInstance
 
 public:
 	UHunterAnimInstance();
+	
+	virtual void NativeBeginPlay() override;
+
 	virtual void NativeUpdateAnimation(float deltaSeconds) override;
 
 private:
@@ -27,4 +33,14 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
 	bool bIsAttacking;
+
+private:
+	UFUNCTION()
+	void AnimNotify_HunterAttack();
+
+public:
+	FOnHunterAttackCheckDelegate OnHunterAttack;
+
+private:
+	class AEcoActorCharacter* Player;
 };

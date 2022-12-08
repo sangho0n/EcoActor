@@ -3,6 +3,8 @@
 #pragma once
 
 #include "EcoActor.h"
+#include "Level3CommonUI.h"
+#include "CharacterStat.h"
 #include "GameFramework/Character.h"
 #include "EcoActorCharacter.generated.h"
 
@@ -30,12 +32,20 @@ public:
 
 	virtual void Tick(float deltaSeconds) override;
 
+	class UCharacterStat* CharacterStat;
+
+	void SetCharacterState(ECharacterState NewState);
+	ECharacterState GetCharacterState() const;
+private:
+	UPROPERTY(Transient, VisibleInstanceOnly, BlueprintReadOnly, Category = State, Meta=(AllowPrivateAccess = true))
+	ECharacterState CurrentState;
+
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
+	UPROPERTY(VisibleAnywhere, Category=Camera)
 	float BaseTurnRate;
 
 	/** Base look up/down rate, in deg/sec. Other scaling may affect final rate. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
+	UPROPERTY(VisibleAnywhere, Category=Camera)
 	float BaseLookUpRate;
 
 protected:
@@ -67,6 +77,8 @@ protected:
 
 	void QPressed();
 
+	float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -79,11 +91,15 @@ private:
 		ShotMode
 	};
 	bool hasInitialized = false;
+
+	TSubclassOf<UUserWidget> CommonUIClass;
+	ULevel3CommonUI* CommonUI;
+
 	TSubclassOf<UUserWidget> MenuWidgetClass;
 	UUserWidget* MenuWidget;
 
 public:
-	void setPlayerMode(EGameMode gameMode);
+	void SetCameraMode(EGameMode gameMode);
 
 	bool isAttacking();
 
@@ -121,7 +137,7 @@ private:
 private:
 	// gun
 	int32 LeftBullets;
-	const int32 MaxBullets = 100;
+	const int32 MaxBullets = 20;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category=Gun, Meta=(AllowPrivateAccess=true))
 	bool bIsEquipping;
 	const float ShottableDistance = 3000.0f;
