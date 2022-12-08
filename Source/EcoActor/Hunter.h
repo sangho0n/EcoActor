@@ -35,6 +35,7 @@ private:
 	bool bAttacked;
 	class UHunterAnimInstance* AnimInstance;
 	class UCharacterStat* CharacterStat;
+	class UWidgetComponent* HPBarWidget;
 
 public:
 	void SetPlayer();
@@ -42,10 +43,13 @@ public:
 	void SetAttacked();
 	UFUNCTION()
 	void Attack();
+	UFUNCTION()
+	void SetDead();
 
 private:
 	float AttackRange;
 	float AttackRadius;
 	float HunterAttackDamage;
-
+	bool bIsDead;
+	int32 DeadSecCount;
 };

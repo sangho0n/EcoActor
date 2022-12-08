@@ -43,4 +43,8 @@ public:
 
 private:
 	class AEcoActorCharacter* Player;
+
+	UAnimationAsset* DeadAnim;
+public:
+	void PlayDeadAnim();
 };

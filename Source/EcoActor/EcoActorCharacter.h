@@ -150,5 +150,11 @@ private:
 
 public:
 	void Equip();
+
+private:
+	bool bIsDead;
+public:
+	UFUNCTION()
+	void SetDead();
 };
 

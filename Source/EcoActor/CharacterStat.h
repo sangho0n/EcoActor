@@ -7,7 +7,7 @@
 #include "CharacterStat.generated.h"
 
 
-DECLARE_MULTICAST_DELEGATE(FOnHPIsZeroDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHPIsZeroDelegate);
 DECLARE_MULTICAST_DELEGATE(FOnHPIsChangedDelegate);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )

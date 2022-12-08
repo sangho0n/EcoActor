@@ -4,6 +4,8 @@
 #include "Hunter.h"
 #include "HunterAiController.h"
 #include "Kismet/GameplayStatics.h"
+#include "HunterHPWidget.h"
+#include "Components/WidgetComponent.h"
 //#include "DrawDebugHelpers.h"
 
 // Sets default values
@@ -15,10 +17,15 @@ AHunter::AHunter()
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 	RootComponent = GetCapsuleComponent();
 	GetCapsuleComponent()->SetCollisionProfileName(TEXT("Hunter"));
+	HPBarWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("HPBarWidget"));
 
 	// skeletal mesh
 	GetMesh()->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, -96.0f), FRotator(0.0f, -90.0f, 0.0f));
 	GetMesh()->SetCollisionProfileName(TEXT("NoCollision"));
+	HPBarWidget->SetupAttachment(GetMesh());
+
+	HPBarWidget->SetRelativeLocation(FVector(0.0f, 0.0f, 180.0f));
+	HPBarWidget->SetWidgetSpace(EWidgetSpace::Screen);
 
 	// 여자 : /Game/MilitaryCharDark/MW_Style2_Female.MW_Style2_Female
 	// 남자 : /Game/MilitaryCharDark/MW_Style2_Male.MW_Style2_Male
@@ -47,6 +54,14 @@ AHunter::AHunter()
 		GetMesh()->SetAnimInstanceClass(ANIMINS_HUNTER.Class);
 	}
 
+	static ConstructorHelpers::FClassFinder<UUserWidget> HPBARWIDGET(TEXT("/Game/Main/UI/HunterHPBar.HunterHPBar_C"));
+	if (HPBARWIDGET.Succeeded())
+	{
+		HPBarWidget->SetWidgetClass(HPBARWIDGET.Class);
+		HPBarWidget->SetDrawSize(FVector2D(150.0f, 50.0f));
+	}
+
+
 	CharacterStat = CreateDefaultSubobject<UCharacterStat>(TEXT("CharacterState"));
 	CharacterStat->SetMaxHP(50.0f);
 
@@ -60,12 +75,21 @@ AHunter::AHunter()
 	AttackRange = 150.0f;
 	AttackRadius = 50.0f;
 	HunterAttackDamage = 10.0f;
+
+	bCanBeDamaged = true;
+	DeadSecCount = 3;
 }
 
 // Called when the game starts or when spawned
 void AHunter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	auto HPWidget = Cast<UHunterHPWidget>(HPBarWidget->GetUserWidgetObject());
+	if (HPWidget->IsValidLowLevel())
+	{
+		HPWidget->BindHunterStat(CharacterStat);
+	}
 
 }
 
@@ -76,6 +100,11 @@ void AHunter::PostInitializeComponents()
 	AnimInstance = Cast<UHunterAnimInstance>(GetMesh()->GetAnimInstance());
 
 	AnimInstance->OnHunterAttack.AddDynamic(this, &AHunter::Attack);
+
+	CharacterStat->OnHPIsZero.AddDynamic(this, &AHunter::SetDead);
+
+	CharacterStat->OnHPChanged.AddLambda([this]()->void {
+		});
 }
 
 // Called every frame
@@ -87,9 +116,13 @@ void AHunter::Tick(float DeltaTime)
 
 float AHunter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser)
 {
-	float FinalDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	if (!bCanBeDamaged) return 0.0f;
 
-	LOG(Warning, TEXT("Hunter Took Damget : %f"), DamageAmount);
+	float FinalDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	FinalDamage = DamageAmount;
+	CharacterStat->SetDamage(FinalDamage);
+
+	LOG(Warning, TEXT("hunter HP %f"), CharacterStat->GetCurrentHP());
 
 	return FinalDamage;
 }
@@ -100,7 +133,7 @@ void AHunter::SetPlayer()
 	if (IsValid(Player))
 	{
 		Player->OnValidAttack.AddLambda([this]() -> void {
-
+			//
 			});
 	}
 }
@@ -167,4 +200,20 @@ void AHunter::Attack()
 //
 //	}
 //#endif
+}
+
+void AHunter::SetDead()
+{
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("IgnoreOnlyPawn"));
+	bIsDead = true;
+	bCanBeDamaged = false;
+	GetController()->Destroy();
+	AnimInstance->PlayDeadAnim();
+	HPBarWidget->SetVisibility(false);
+
+	FTimerHandle WaitHandle;
+	GetWorld()->GetTimerManager().SetTimer(WaitHandle, FTimerDelegate::CreateLambda([&]()
+		{
+			Destroy();
+		}), DeadSecCount, false);
 }

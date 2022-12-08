@@ -10,6 +10,12 @@ UHunterAnimInstance::UHunterAnimInstance()
 	CurrSpeed = 0.0f;
 	bIsHyperMode = false;
 	bIsAttacking = false;
+
+	ConstructorHelpers::FObjectFinder<UAnimationAsset> DEADANIM(TEXT("/Game/Main/Anim/Hunter/Hunter_Death_3.Hunter_Death_3"));
+	if (DEADANIM.Succeeded())
+	{
+		DeadAnim = DEADANIM.Object;
+	}
 }
 
 void UHunterAnimInstance::NativeBeginPlay()
@@ -30,7 +36,7 @@ void UHunterAnimInstance::NativeUpdateAnimation(float deltaSeconds)
 {
 	Super::NativeUpdateAnimation(deltaSeconds);
 
-	auto pawn = TryGetPawnOwner();
+	auto pawn =TryGetPawnOwner();
 	if (IsValid(pawn))
 	{
 		CurrSpeed = pawn->GetVelocity().Size();
@@ -40,4 +46,10 @@ void UHunterAnimInstance::NativeUpdateAnimation(float deltaSeconds)
 void UHunterAnimInstance::AnimNotify_HunterAttack()
 {
 	OnHunterAttack.Broadcast();
+}
+
+void UHunterAnimInstance::PlayDeadAnim()
+{
+	auto pawn = Cast<ACharacter>(TryGetPawnOwner());
+	pawn->GetMesh()->PlayAnimation(DeadAnim, false);
 }

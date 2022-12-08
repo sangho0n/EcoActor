@@ -111,7 +111,8 @@ AEcoActorCharacter::AEcoActorCharacter()
 	//SetActorHiddenInGame(true);
 	SetActorHiddenInGame(false);
 	//CommonUI->SetVisibility(ESlateVisibility::Hidden);
-	bCanBeDamaged = false;
+	bCanBeDamaged = true;
+	bIsDead = false;
 }
 
 void AEcoActorCharacter::BeginPlay()
@@ -211,6 +212,8 @@ void AEcoActorCharacter::PostInitializeComponents()
 	CharacterStat->OnHPChanged.AddLambda([this]() -> void{
 		// hp 변하도록
 		});
+
+	CharacterStat->OnHPIsZero.AddDynamic(this, &AEcoActorCharacter::SetDead);
 }
 
 void AEcoActorCharacter::SetCameraMode(EGameMode newGameMode)
@@ -546,6 +549,8 @@ void AEcoActorCharacter::Shot()
 
 float AEcoActorCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
+	if (!bCanBeDamaged) return 0.0f;
+
 	float FinalDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 	FinalDamage = DamageAmount;
 
@@ -584,3 +589,8 @@ void AEcoActorCharacter::QPressed()
 	}
 }
 
+void AEcoActorCharacter::SetDead()
+{
+	bIsDead = true;
+	bCanBeDamaged = false;
+}
