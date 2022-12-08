@@ -87,7 +87,8 @@ void ULevel3CommonUI::UpdateLeftTime()
 	}
 	if (min < 0)
 	{
-		// broadcast on time's up
+		// broadcast
+		OnTimesUp.Broadcast();
 	}
 	TEXT_TimeLeft_C->SetText(FText::FromString(FString::FromInt(min) + TEXT(":") + FString::FromInt(sec)));
 }

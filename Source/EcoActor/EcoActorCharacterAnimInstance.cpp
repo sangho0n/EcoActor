@@ -3,6 +3,7 @@
 
 #include "EcoActorCharacterAnimInstance.h"
 #include "EcoActorCharacter.h"
+#include "Kismet/GameplayStatics.h"
 
 UEcoActorCharacterAnimInstance::UEcoActorCharacterAnimInstance()
 {
@@ -20,6 +21,12 @@ UEcoActorCharacterAnimInstance::UEcoActorCharacterAnimInstance()
 		ShotAnim = SHOT.Object;
 	}
 	bIsEquipping = false;
+
+	static ConstructorHelpers::FObjectFinder<UAnimationAsset> DEAD(TEXT("/Game/Main/Anim/Character/Character_Death_2.Character_Death_2"));
+	if (DEAD.Succeeded())
+	{
+		DeadAnim = DEAD.Object;
+	}
 }
 
 void UEcoActorCharacterAnimInstance::NativeUpdateAnimation(float deltaSeconds)
@@ -95,4 +102,14 @@ FName UEcoActorCharacterAnimInstance::getComboNontageSectionName(int32 currCombo
 void UEcoActorCharacterAnimInstance::AnimNotify_ShotTriggered()
 {
 	OnShotTriggered.Broadcast();
+}
+
+void UEcoActorCharacterAnimInstance::PlayDeadAnim()
+{
+	auto Player = Cast<AEcoActorCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+
+	if (IsValid(Player))
+	{
+		Player->GetMesh()->PlayAnimation(DeadAnim, false);
+	}
 }

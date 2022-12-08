@@ -18,6 +18,11 @@ public:
 private:
 	void BeginPlay() override;
 
+private:
+	UFUNCTION()
+	void OnFail();
+	TSubclassOf<UUserWidget> GameEndWidgetClass;
+	UUserWidget* GameEndWidget;
 };
 
 

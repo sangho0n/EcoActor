@@ -10,6 +10,7 @@
 
 DECLARE_MULTICAST_DELEGATE(FOnCharacterDoValidAttack);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterStateChanged, ECharacterState, NewState);
+DECLARE_DELEGATE(FOnGameFailedDelegate);
 
 UCLASS(config=Game)
 class AEcoActorCharacter : public ACharacter
@@ -52,6 +53,8 @@ private:
 	/** Base look up/down rate, in deg/sec. Other scaling may affect final rate. */
 	UPROPERTY(VisibleAnywhere, Category=Camera)
 	float BaseLookUpRate;
+
+	float CharacterMaxSpeed;
 
 protected:
 	void Jump() override;
@@ -127,7 +130,7 @@ private:
 	bool bIsEquipped;
 	bool bHoldKeyControl;
 	FVector TargetPoint;
-	const float HitDamage = 5.0f;
+	float HitDamage = 5.0f;
 
 	class UEcoActorCharacterAnimInstance* AnimInstance;
 protected:
@@ -149,7 +152,7 @@ private:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category=Gun, Meta=(AllowPrivateAccess=true))
 	bool bIsEquipping;
 	const float ShottableDistance = 3000.0f;
-	const float ShotDamage = 10.0f;
+	float ShotDamage = 10.0f;
 
 	UFUNCTION()
 	void Shot();
@@ -164,5 +167,16 @@ private:
 public:
 	UFUNCTION()
 	void SetDead();
+
+	FOnGameFailedDelegate OnGameFailed;
+
+	//buff
+public:
+	void ZebraBuff();
+	void ElephantBuff();
+	void CrocoBuff();
+private:
+	bool bOnZebraBuff;
+	bool bOnCrocoBuff;
 };
 

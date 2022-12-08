@@ -4,6 +4,7 @@
 #include "EcoActorZebra.h"
 #include "AnimalAIController.h"
 #include "AnimalAnimInstance.h"
+#include "EcoActorCharacter.h"
 #include "Components/CapsuleComponent.h"
 
 // Sets default values
@@ -61,6 +62,7 @@ void AEcoActorZebra::OnCharacterBeginOverlap(UPrimitiveComponent* OverlappedComp
 	AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
 	bool bFromSweep, const FHitResult& SweepResult)
 {
-	LOG(Warning, TEXT("ttt"));
+	auto Player = Cast<AEcoActorCharacter>(OtherActor);
+	Player->ZebraBuff();
 	Destroy();
 }

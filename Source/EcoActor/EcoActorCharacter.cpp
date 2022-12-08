@@ -121,6 +121,9 @@ AEcoActorCharacter::AEcoActorCharacter()
 	bIsDead = false;
 
 	SetCharacterState(ECharacterState::PREINIT);
+	bOnZebraBuff = false;
+	bOnCrocoBuff = false;
+	CharacterMaxSpeed = GetCharacterMovement()->MaxWalkSpeed;
 }
 
 void AEcoActorCharacter::BeginPlay()
@@ -155,6 +158,9 @@ void AEcoActorCharacter::BeginPlay()
 	CharacterStat->OnScoreChanged.AddLambda([this]()->void {
 		CommonUI->UpdateScore();
 		});
+
+
+	CommonUI->OnTimesUp.AddUFunction(this, FName("SetCharacterState"), ECharacterState::DEAD);
 }
 
 void AEcoActorCharacter::SetCharacterState(ECharacterState NewState)
@@ -214,7 +220,6 @@ void AEcoActorCharacter::SetCharacterState(ECharacterState NewState)
 	{
 		auto PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 		SetActorHiddenInGame(false);
-		PlayerController->SetPause(true);
 		PlayerController->SetInputMode(FInputModeUIOnly());
 		PlayerController->bShowMouseCursor = true;
 		PlayerController->bEnableClickEvents = true;
@@ -222,6 +227,8 @@ void AEcoActorCharacter::SetCharacterState(ECharacterState NewState)
 		CommonUI->SetVisibility(ESlateVisibility::Hidden);
 		bCanBeDamaged = false;
 		bIsDead = true;
+		AnimInstance->PlayDeadAnim();
+		OnGameFailed.Execute();
 
 		break;
 	}
@@ -266,9 +273,6 @@ void AEcoActorCharacter::PostInitializeComponents()
 
 	AnimInstance->OnShotTriggered.AddDynamic(this, &AEcoActorCharacter::Shot);
 
-	CharacterStat->OnHPChanged.AddLambda([this]() -> void{
-		// hp 변하도록
-		});
 
 	CharacterStat->OnHPIsZero.AddDynamic(this, &AEcoActorCharacter::SetDead);
 }
@@ -418,7 +422,7 @@ void AEcoActorCharacter::AttackWithGunStart()
 	if (!bIsEquipped || bIsEquipping) return;
 
 	bIsAttacking = true;
-	GetCharacterMovement()->MaxWalkSpeed /= 2.0f;
+	GetCharacterMovement()->MaxWalkSpeed = CharacterMaxSpeed / 2;
 	SetCameraMode(EGameMode::ShotMode);
 }
 
@@ -427,7 +431,7 @@ void AEcoActorCharacter::AttackWithGunStop()
 	if (!bIsEquipped || bIsEquipping) return;
 
 	bIsAttacking = false;
-	GetCharacterMovement()->MaxWalkSpeed *= 2.0f;
+	GetCharacterMovement()->MaxWalkSpeed = CharacterMaxSpeed;
 	SetCameraMode(EGameMode::ThirdPerson);
 }
 
@@ -650,4 +654,57 @@ void AEcoActorCharacter::QPressed()
 void AEcoActorCharacter::SetDead()
 {
 	SetCharacterState(ECharacterState::DEAD);
+}
+
+void AEcoActorCharacter::ZebraBuff()
+{
+	FTimerHandle TimerHandle;
+	if (bOnZebraBuff)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
+		goto SetBuff;
+	}
+
+	bOnZebraBuff = true;
+
+SetBuff:
+	LOG(Warning, TEXT("zebra buff"));
+	// speed up for 5 second
+	GetCharacterMovement()->MaxWalkSpeed *= 2.0f;
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateLambda([&]()->void {
+		GetCharacterMovement()->MaxWalkSpeed = CharacterMaxSpeed;
+		bOnZebraBuff = false;
+		LOG(Warning, TEXT("zebra buff end"));
+		}), 5.0f, false);
+}
+
+void AEcoActorCharacter::ElephantBuff()
+{
+	// heal
+	LOG(Warning, TEXT("heal"));
+	CharacterStat->SetHP(CharacterStat->GetCurrentHP() + 30.0f);
+}
+
+void AEcoActorCharacter::CrocoBuff()
+{
+	FTimerHandle TimerHandle;
+	if (bOnCrocoBuff)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
+		goto SetBuff;
+	}
+
+	bOnCrocoBuff = true;
+
+SetBuff:
+	LOG(Warning, TEXT("croco buff start"));
+	// extra damage for 5 second
+	auto TempHitDam = HitDamage, TempShotDam = ShotDamage;
+	HitDamage *= 2.0f; ShotDamage *= 2.0f;
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateLambda([&]()->void {
+		HitDamage = TempHitDam;
+		ShotDamage = TempShotDam;
+		bOnCrocoBuff = false;
+		LOG(Warning, TEXT("croco buff end"));
+		}), 5.0f, false);
 }

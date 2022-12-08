@@ -78,4 +78,8 @@ public:
 private:
 	FName getComboNontageSectionName(int32 currCombo);
 
+	UAnimationAsset* DeadAnim;
+
+public:
+	void PlayDeadAnim();
 };

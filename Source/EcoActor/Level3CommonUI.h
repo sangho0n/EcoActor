@@ -7,6 +7,7 @@
 #include "CharacterStat.h"
 #include "Level3CommonUI.generated.h"
 
+DECLARE_MULTICAST_DELEGATE(FOnTimesUpDelegate);
 /**
  * 
  */
@@ -43,6 +44,7 @@ public:
 	void UpdateLeftTime();
 public:
 	void PlayTimer();
+	FOnTimesUpDelegate OnTimesUp;
 
 private:
 	int32 min;
