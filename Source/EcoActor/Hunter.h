@@ -46,9 +46,6 @@ private:
 	
 
 public:
-	void SetPlayer();
-	bool GetAttacked();
-	void SetAttacked();
 	UFUNCTION()
 	void Attack();
 	UFUNCTION()

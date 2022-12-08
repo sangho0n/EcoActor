@@ -71,13 +71,13 @@ AHunter::AHunter()
 
 	AIControllerClass = AHunterAiController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
-	bAttacked = false;
 	AttackRange = 150.0f;
 	AttackRadius = 50.0f;
 	HunterAttackDamage = 10.0f;
 
 	bCanBeDamaged = true;
 	DeadSecCount = 3;
+
 }
 
 // Called when the game starts or when spawned
@@ -93,6 +93,10 @@ void AHunter::BeginPlay()
 
 	auto Player = Cast<AEcoActorCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	Player->OnCharacterStateChanged.AddDynamic(this, &AHunter::SetHunterState);
+
+	SetHunterState(ECharacterState::READY);
+
+	Player->CharacterStat->OnScoreReachTop.AddDynamic(this, &AHunter::SetDead);
 }
 
 void AHunter::SetHunterState(ECharacterState NewState)
@@ -151,13 +155,12 @@ void AHunter::PostInitializeComponents()
 void AHunter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 float AHunter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser)
 {
 	if (!bCanBeDamaged) return 0.0f;
-
+	bAttacked = true;
 	float FinalDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 	FinalDamage = DamageAmount;
 	CharacterStat->SetDamage(FinalDamage);
@@ -167,26 +170,6 @@ float AHunter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageE
 	return FinalDamage;
 }
 
-void AHunter::SetPlayer()
-{
-	Player = Cast<AEcoActorCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-	//if (IsValid(Player))
-	//{
-	//	Player->OnValidAttack.AddLambda([this]() -> void {
-	//		//
-	//		});
-	//}
-}
-
-bool AHunter::GetAttacked()
-{
-	return bAttacked;
-}
-
-void AHunter::SetAttacked()
-{
-	bAttacked = true;
-}
 
 void AHunter::Attack()
 {

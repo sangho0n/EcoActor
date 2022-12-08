@@ -109,6 +109,9 @@ private:
 	TSubclassOf<UUserWidget> MenuWidgetClass;
 	UUserWidget* MenuWidget;
 
+	TSubclassOf<UUserWidget> SuccessWidgetClass;
+	UUserWidget* SuccessWidget;
+
 public:
 	void SetCameraMode(EGameMode gameMode);
 
@@ -178,5 +181,9 @@ public:
 private:
 	bool bOnZebraBuff;
 	bool bOnCrocoBuff;
+
+private:
+	UFUNCTION()
+	void Complete();
 };
 

@@ -46,23 +46,18 @@ void AHunterAiController::BeginPlay()
 	{
 		Player->OnValidAttack.AddLambda([this]() -> void {
 			LOG(Warning, TEXT("hunter ai controller begin play add lambda"));
-			ControlledPawn->SetAttacked();
-			this->GetBlackboardComponent()->SetValueAsBool(AHunterAiController::WasAttackedKey, ControlledPawn->GetAttacked());
+			this->GetBlackboardComponent()->SetValueAsBool(AHunterAiController::WasAttackedKey, true);
 			this->GetBlackboardComponent()->SetValueAsVector(AHunterAiController::PlayerPosKey, Player->GetActorLocation());
 			});
 	}
 
 	auto ControlledPawn = Cast<AHunter>(this->GetPawn());
-	ControlledPawn->SetPlayer();
 
 }
 
 void AHunterAiController::Tick(float DeltaSeconds)
 {
-	if (ControlledPawn->GetAttacked())
-	{
-		this->GetBlackboardComponent()->SetValueAsVector(AHunterAiController::PlayerPosKey, Player->GetActorLocation());
-	}
+	
 }
 
 void AHunterAiController::OnPossess(APawn* InPawn)

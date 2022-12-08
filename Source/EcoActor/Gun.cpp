@@ -8,13 +8,13 @@
 AGun::AGun()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 
 	Trigger = CreateDefaultSubobject<UBoxComponent>(TEXT("Trigger"));
 	Gun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Gun"));
 
-	Trigger->SetBoxExtent(FVector(30.0f, 60.0f, 60.0f));
-	Trigger->SetRelativeLocation(FVector(0.0f, 20.0f, 0.0f));
+	Trigger->SetBoxExtent(FVector(30.0f, 60.0f, 30.0f));
+	Trigger->SetRelativeLocation(FVector(0.0f, 20.0f, -30.0f));
 	RootComponent = Trigger;
 	Gun->SetupAttachment(RootComponent);
 

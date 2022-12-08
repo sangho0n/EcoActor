@@ -113,6 +113,12 @@ AEcoActorCharacter::AEcoActorCharacter()
 	{
 		BackgroundStoryWidgetClass = BG_UI.Class;
 	}
+
+	static ConstructorHelpers::FClassFinder<UUserWidget> SC_UI(TEXT("/Game/Main/UI/BP_MissionComplete_UI.BP_MissionComplete_UI_C"));
+	if (SC_UI.Succeeded())
+	{
+		SuccessWidgetClass = SC_UI.Class;
+	}
 	
 	//SetActorHiddenInGame(true);
 	SetActorHiddenInGame(false);
@@ -275,6 +281,8 @@ void AEcoActorCharacter::PostInitializeComponents()
 
 
 	CharacterStat->OnHPIsZero.AddDynamic(this, &AEcoActorCharacter::SetDead);
+
+	CharacterStat->OnScoreReachTop.AddDynamic(this, &AEcoActorCharacter::Complete);
 }
 
 void AEcoActorCharacter::SetCameraMode(EGameMode newGameMode)
@@ -707,4 +715,19 @@ SetBuff:
 		bOnCrocoBuff = false;
 		LOG(Warning, TEXT("croco buff end"));
 		}), 5.0f, false);
+}
+
+void AEcoActorCharacter::Complete()
+{
+	SuccessWidget = CreateWidget(GetWorld(), SuccessWidgetClass);
+	if (IsValid(SuccessWidget))
+	{
+		auto PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+		SuccessWidget->AddToViewport();
+
+		PlayerController->SetInputMode(FInputModeUIOnly());
+		PlayerController->bShowMouseCursor = true;
+		PlayerController->bEnableClickEvents = true;
+		PlayerController->bEnableMouseOverEvents = true;
+	}
 }

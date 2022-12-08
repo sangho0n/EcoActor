@@ -12,6 +12,7 @@ UCharacterStat::UCharacterStat()
 	bWantsInitializeComponent = true;
 	bIsDead = false;
 	Score = 0;
+	ScoreMax = 3;
 }
 
 
@@ -81,4 +82,9 @@ void UCharacterStat::ScoreUp()
 int64 UCharacterStat::GetScore()
 {
 	return Score;
+}
+
+void UCharacterStat::EqualsOrGreaterThanScoreMax()
+{
+	OnScoreReachTop.Broadcast();
 }
