@@ -6,6 +6,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "HunterHPWidget.h"
 #include "Components/WidgetComponent.h"
+#include "Camera/PlayerCameraManager.h"
 //#include "DrawDebugHelpers.h"
 
 // Sets default values
@@ -24,8 +25,9 @@ AHunter::AHunter()
 	GetMesh()->SetCollisionProfileName(TEXT("NoCollision"));
 	HPBarWidget->SetupAttachment(GetMesh());
 
-	HPBarWidget->SetRelativeLocation(FVector(0.0f, 0.0f, 180.0f));
-	HPBarWidget->SetWidgetSpace(EWidgetSpace::Screen);
+	HPBarWidget->SetRelativeLocation(FVector(0.0f, 0.0f, 200.0f));
+	HPBarWidget->SetRelativeRotation(FRotator(0.0f, 90.0f, 0.0f));
+	HPBarWidget->SetWidgetSpace(EWidgetSpace::World);
 
 	// 여자 : /Game/MilitaryCharDark/MW_Style2_Female.MW_Style2_Female
 	// 남자 : /Game/MilitaryCharDark/MW_Style2_Male.MW_Style2_Male
@@ -77,13 +79,13 @@ AHunter::AHunter()
 
 	bCanBeDamaged = true;
 	DeadSecCount = 3;
-
 }
 
 // Called when the game starts or when spawned
 void AHunter::BeginPlay()
 {
 	Super::BeginPlay();
+	bAttacked = false;
 
 	auto HPWidget = Cast<UHunterHPWidget>(HPBarWidget->GetUserWidgetObject());
 	if (HPWidget->IsValidLowLevel())
@@ -94,9 +96,10 @@ void AHunter::BeginPlay()
 	auto Player = Cast<AEcoActorCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	Player->OnCharacterStateChanged.AddDynamic(this, &AHunter::SetHunterState);
 
+
 	SetHunterState(ECharacterState::READY);
 
-	Player->CharacterStat->OnScoreReachTop.AddDynamic(this, &AHunter::SetDead);
+	//Player->CharacterStat->OnScoreReachTop.AddDynamic(this, &AHunter::SetDead);
 }
 
 void AHunter::SetHunterState(ECharacterState NewState)
@@ -128,13 +131,21 @@ void AHunter::SetHunterState(ECharacterState NewState)
 	{
 		bCanBeDamaged = true;
 		bIsDead = false;
-		HPBarWidget->SetVisibility(true);
+		HPBarWidget->SetVisibility(false);
 		SetActorHiddenInGame(false);
 		Cast<AHunterAiController>(GetController())->RunAI();
 
 		break;
 	}
 	}
+}
+
+void AHunter::SetHPBarVisible()
+{
+	if (bAttacked) return; //already attacked
+
+	bAttacked = true;
+	HPBarWidget->SetVisibility(true);
 }
 
 void AHunter::PostInitializeComponents()
@@ -155,12 +166,23 @@ void AHunter::PostInitializeComponents()
 void AHunter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	// make hpbar widget to see screen
+	if (bAttacked)
+	{
+		auto Player = Cast<AEcoActorCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+		auto CameraLoc = Player->GetCameraComponent()->GetComponentLocation();
+		auto HPBarLoc = HPBarWidget->GetComponentLocation();
+		auto HPBarToCameraRot = (CameraLoc - HPBarLoc).Rotation();
+
+		HPBarWidget->SetWorldRotation(HPBarToCameraRot);
+	}
 }
+
 
 float AHunter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser)
 {
 	if (!bCanBeDamaged) return 0.0f;
-	bAttacked = true;
 	float FinalDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 	FinalDamage = DamageAmount;
 	CharacterStat->SetDamage(FinalDamage);

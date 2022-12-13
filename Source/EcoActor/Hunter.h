@@ -32,8 +32,8 @@ public:
 
 private:
 	class AEcoActorCharacter* Player;
-	bool bAttacked;
 	class UHunterAnimInstance* AnimInstance;
+	bool bAttacked;
 	class UCharacterStat* CharacterStat;
 public:
 private:
@@ -43,13 +43,13 @@ private:
 	ECharacterState HunterState;
 	UFUNCTION()
 	void SetHunterState(ECharacterState NewState);
-	
 
 public:
 	UFUNCTION()
 	void Attack();
 	UFUNCTION()
 	void SetDead();
+	void SetHPBarVisible();
 
 private:
 	float AttackRange;

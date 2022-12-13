@@ -123,6 +123,8 @@ public:
 
 	FOnCharacterDoValidAttack OnValidAttack;
 
+	UCameraComponent* GetCameraComponent();
+
 private:
 	// combo ฐüทร
 	int32 currentCombo;

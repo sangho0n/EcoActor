@@ -27,6 +27,7 @@ void UHunterAnimInstance::NativeBeginPlay()
 	if (IsValid(Player))
 	{
 		Player->OnValidAttack.AddLambda([this]()->void {
+			// 헌터 피격 시 플레이어를 향하여 공격하도록 설정
 			bIsAttacking = true;
 			});
 	}

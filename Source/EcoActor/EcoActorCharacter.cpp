@@ -10,6 +10,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "EcoActorCharacterAnimInstance.h"
 #include "EcoActorCharacterState.h"
+#include "Hunter.h"
 #include "UserWidget.h"
 //#include "DrawDebugHelpers.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -167,6 +168,11 @@ void AEcoActorCharacter::BeginPlay()
 
 
 	CommonUI->OnTimesUp.AddUFunction(this, FName("SetCharacterState"), ECharacterState::DEAD);
+}
+
+UCameraComponent* AEcoActorCharacter::GetCameraComponent()
+{
+	return FollowCamera;
 }
 
 void AEcoActorCharacter::SetCharacterState(ECharacterState NewState)
@@ -496,10 +502,13 @@ void AEcoActorCharacter::Hit()
 
 	if (bResult)
 	{
+		OnValidAttack.Broadcast();
+		// delegate에 boradcast시키면 setpercent에서 오류가 나서 부득이하게 캐릭터에서 직접 hunter 접근
+		auto Hunter = Cast<AHunter>(HitResult.Actor);
+		Hunter->SetHPBarVisible();
+
 		FDamageEvent DamageEvent;
 		HitResult.Actor->TakeDamage(HitDamage, DamageEvent, GetController(), this);
-
-		OnValidAttack.Broadcast();
 	}
 
 //#if ENABLE_DRAW_DEBUG
@@ -584,10 +593,13 @@ void AEcoActorCharacter::Shot()
 		);
 		if (bResult)
 		{
+			OnValidAttack.Broadcast();
+			// delegate에 boradcast시키면 setpercent에서 오류가 나서 부득이하게 캐릭터에서 직접 hunter 접근
+			auto Hunter = Cast<AHunter>(HitResult.Actor);
+			Hunter->SetHPBarVisible();
+
 			FDamageEvent DamageEvent;
 			HitResult.Actor->TakeDamage(ShotDamage, DamageEvent, GetController(), this);
-
-			OnValidAttack.Broadcast();
 		}
 
 //#if ENABLE_DRAW_DEBUG
@@ -719,11 +731,15 @@ SetBuff:
 
 void AEcoActorCharacter::Complete()
 {
+	LOG(Warning, TEXT("success"));
 	SuccessWidget = CreateWidget(GetWorld(), SuccessWidgetClass);
+	bCanBeDamaged = false;
 	if (IsValid(SuccessWidget))
 	{
 		auto PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 		SuccessWidget->AddToViewport();
+		
+		GetMovementComponent()->Deactivate();
 
 		PlayerController->SetInputMode(FInputModeUIOnly());
 		PlayerController->bShowMouseCursor = true;

@@ -77,6 +77,7 @@ void UCharacterStat::ScoreUp()
 {
 	Score++;
 	OnScoreChanged.Broadcast();
+	if (Score >= ScoreMax) EqualsOrGreaterThanScoreMax();
 }
 
 int64 UCharacterStat::GetScore()
