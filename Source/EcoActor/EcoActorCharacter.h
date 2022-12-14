@@ -192,5 +192,15 @@ private:
 private:
 	UFUNCTION()
 	void Complete();
+
+
+	//sound
+private:
+	class USoundBase* BGM;
+	UAudioComponent* BGMComponent;
+	class USoundBase* PickupGunSound;
+	UAudioComponent* PickupGunAudioComponent;
+	class USoundBase* ShotGunSound;
+	UAudioComponent* ShotGunAudioComponent;
 };
 

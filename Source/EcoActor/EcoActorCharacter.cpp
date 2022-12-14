@@ -135,11 +135,42 @@ AEcoActorCharacter::AEcoActorCharacter()
 	bOnZebraBuff = false;
 	bOnCrocoBuff = false;
 	CharacterMaxSpeed = GetCharacterMovement()->MaxWalkSpeed;
+
+	// sound
+	static ConstructorHelpers::FObjectFinder<USoundBase> BGMSOUND(TEXT("/Game/StylizedForestPack/Sounds/Ambiances/Cues/Forest_Daytime/Forest_Daytime_1_Cue.Forest_Daytime_1_Cue"));
+	if (BGMSOUND.Succeeded())
+	{
+		BGM = BGMSOUND.Object;
+	}
+	static ConstructorHelpers::FObjectFinder<USoundBase> PICKUPSOUND(TEXT("/Game/MilitaryWeapDark/Sound/Rifle/Rifle_Raise_Cue.Rifle_Raise_Cue"));
+	if (PICKUPSOUND.Succeeded())
+	{
+		PickupGunSound = PICKUPSOUND.Object;
+	}
+	static ConstructorHelpers::FObjectFinder<USoundBase> SHOTSOUND(TEXT("/Game/MilitaryWeapDark/Sound/Rifle/RifleB_FireLoop_Cue.RifleB_FireLoop_Cue"));
+	if (SHOTSOUND.Succeeded())
+	{
+		ShotGunSound = SHOTSOUND.Object;
+	}
+	
+	BGMComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("BGMComponent"));
+	PickupGunAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("PickupGunAudioComponent"));
+	ShotGunAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("ShotGunAudioComponent"));
+	BGMComponent->SetupAttachment(RootComponent);
+	PickupGunAudioComponent->SetupAttachment(RootComponent);
+	ShotGunAudioComponent->SetupAttachment(RootComponent);
 }
 
 void AEcoActorCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	BGMComponent->SetSound(BGM);
+	BGMComponent->Stop();
+	PickupGunAudioComponent->SetSound(PickupGunSound);
+	PickupGunAudioComponent->Stop();
+	ShotGunAudioComponent->SetSound(ShotGunSound);
+	ShotGunAudioComponent->Stop();
 
 	spawner = GetWorld()->SpawnActor<ASpawner>(GetActorLocation(), FRotator::ZeroRotator);
 	spawner->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform);
@@ -236,6 +267,7 @@ void AEcoActorCharacter::SetCharacterState(ECharacterState NewState)
 		PlayerController->bEnableMouseOverEvents = false;
 		bCanBeDamaged = true;
 		CommonUI->PlayTimer();
+		BGMComponent->Play();
 
 		break;
 	}
@@ -252,6 +284,7 @@ void AEcoActorCharacter::SetCharacterState(ECharacterState NewState)
 		bIsDead = true;
 		AnimInstance->PlayDeadAnim();
 		OnGameFailed.Execute();
+		BGMComponent->Stop();
 
 		break;
 	}
@@ -449,6 +482,7 @@ void AEcoActorCharacter::AttackWithGunStart()
 	bIsAttacking = true;
 	GetCharacterMovement()->MaxWalkSpeed = CharacterMaxSpeed / 2;
 	SetCameraMode(EGameMode::ShotMode);
+	ShotGunAudioComponent->Play();
 }
 
 void AEcoActorCharacter::AttackWithGunStop()
@@ -458,6 +492,7 @@ void AEcoActorCharacter::AttackWithGunStop()
 	bIsAttacking = false;
 	GetCharacterMovement()->MaxWalkSpeed = CharacterMaxSpeed;
 	SetCameraMode(EGameMode::ThirdPerson);
+	ShotGunAudioComponent->Stop();
 }
 
 void AEcoActorCharacter::Tick(float deltaSeconds)
@@ -663,6 +698,7 @@ void AEcoActorCharacter::Equip()
 	bIsEquipped = true;
 	LeftBullets = MaxBullets;
 	CommonUI->SetGunMode();
+	PickupGunAudioComponent->Play();
 }
 
 void AEcoActorCharacter::QPressed()
@@ -684,6 +720,7 @@ void AEcoActorCharacter::QPressed()
 void AEcoActorCharacter::SetDead()
 {
 	SetCharacterState(ECharacterState::DEAD);
+	Destroy();
 }
 
 void AEcoActorCharacter::ZebraBuff()

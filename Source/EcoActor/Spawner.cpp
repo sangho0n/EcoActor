@@ -22,9 +22,9 @@ ASpawner::ASpawner()
 	HunterTime = 3.0f;
 	AnimalTime = 3.0f;
 	GunTime = 5.0f;
-	MaxHunter = 5;
-	MaxAnimal = 3;
-	MaxGun = 1;
+	MaxHunter = 8;
+	MaxAnimal = 5;
+	MaxGun = 3;
 }
 
 // Called when the game starts or when spawned
