@@ -35,7 +35,6 @@ private:
 	class UHunterAnimInstance* AnimInstance;
 	bool bAttacked;
 	class UCharacterStat* CharacterStat;
-public:
 private:
 	class UWidgetComponent* HPBarWidget;
 
@@ -57,4 +56,7 @@ private:
 	float HunterAttackDamage;
 	bool bIsDead;
 	int32 DeadSecCount;
+
+public :
+	void OnValidAttack();
 };

@@ -21,16 +21,6 @@ UHunterAnimInstance::UHunterAnimInstance()
 void UHunterAnimInstance::NativeBeginPlay()
 {
 	Super::NativeBeginPlay();
-
-	Player = Cast<AEcoActorCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-
-	if (IsValid(Player))
-	{
-		Player->OnValidAttack.AddLambda([this]()->void {
-			// 헌터 피격 시 플레이어를 향하여 공격하도록 설정
-			bIsAttacking = true;
-			});
-	}
 }
 
 void UHunterAnimInstance::NativeUpdateAnimation(float deltaSeconds)
@@ -53,4 +43,9 @@ void UHunterAnimInstance::PlayDeadAnim()
 {
 	auto pawn = Cast<ACharacter>(TryGetPawnOwner());
 	pawn->GetMesh()->PlayAnimation(DeadAnim, false);
+}
+
+void UHunterAnimInstance::SetHunterToAttack()
+{
+	bIsAttacking = true;
 }

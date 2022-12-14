@@ -5,6 +5,7 @@
 #include "AnimalAIController.h"
 #include "AnimalAnimInstance.h"
 #include "EcoActorCharacter.h"
+#include "Spawner.h"
 #include "Components/CapsuleComponent.h"
 
 // Sets default values
@@ -64,7 +65,12 @@ void AEcoActorCrocodile::OnCharacterBeginOverlap(UPrimitiveComponent* Overlapped
 	AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
 	bool bFromSweep, const FHitResult& SweepResult)
 {
-	auto Player = Cast<AEcoActorCharacter>(OtherActor);
-	Player->CrocoBuff();
+	if (OtherActor->IsA(AEcoActorCharacter::StaticClass()))
+	{
+		auto Player = Cast<AEcoActorCharacter>(OtherActor);
+		Player->CrocoBuff();
+	}
+	auto Player = Cast<AEcoActorCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	Player->GetSpawner()->DecCurrAnimal();
 	Destroy();
 }

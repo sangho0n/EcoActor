@@ -52,4 +52,8 @@ private:
 public:
 	void RunAI();
 	void StopAI();
+private:
+	bool bIsAttacking;
+public:
+	void SetControllerToAttack();
 };

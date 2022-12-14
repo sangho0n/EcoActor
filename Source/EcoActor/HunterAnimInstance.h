@@ -41,6 +41,8 @@ private:
 public:
 	FOnHunterAttackCheckDelegate OnHunterAttack;
 
+	void SetHunterToAttack();
+
 private:
 	class AEcoActorCharacter* Player;
 

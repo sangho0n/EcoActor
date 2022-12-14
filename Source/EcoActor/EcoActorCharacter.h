@@ -8,7 +8,6 @@
 #include "GameFramework/Character.h"
 #include "EcoActorCharacter.generated.h"
 
-DECLARE_MULTICAST_DELEGATE(FOnCharacterDoValidAttack);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterStateChanged, ECharacterState, NewState);
 DECLARE_DELEGATE(FOnGameFailedDelegate);
 
@@ -18,6 +17,7 @@ class AEcoActorCharacter : public ACharacter
 	GENERATED_BODY()
 
 
+private:
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* CameraBoom;
@@ -25,6 +25,13 @@ class AEcoActorCharacter : public ACharacter
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	class ASpawner* spawner;
+
+public:
+	class ASpawner* GetSpawner();
+
 public:
 	AEcoActorCharacter();
 
@@ -120,8 +127,6 @@ public:
 	bool isEquipped();
 
 	void SetIsEquipping(bool newvalue);
-
-	FOnCharacterDoValidAttack OnValidAttack;
 
 	UCameraComponent* GetCameraComponent();
 

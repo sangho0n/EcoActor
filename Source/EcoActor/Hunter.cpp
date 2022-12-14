@@ -7,6 +7,7 @@
 #include "HunterHPWidget.h"
 #include "Components/WidgetComponent.h"
 #include "Camera/PlayerCameraManager.h"
+#include "Spawner.h"
 //#include "DrawDebugHelpers.h"
 
 // Sets default values
@@ -99,7 +100,6 @@ void AHunter::BeginPlay()
 
 	SetHunterState(ECharacterState::READY);
 
-	//Player->CharacterStat->OnScoreReachTop.AddDynamic(this, &AHunter::SetDead);
 }
 
 void AHunter::SetHunterState(ECharacterState NewState)
@@ -143,8 +143,6 @@ void AHunter::SetHunterState(ECharacterState NewState)
 void AHunter::SetHPBarVisible()
 {
 	if (bAttacked) return; //already attacked
-
-	bAttacked = true;
 	HPBarWidget->SetVisibility(true);
 }
 
@@ -259,10 +257,22 @@ void AHunter::SetDead()
 
 	auto Player = Cast<AEcoActorCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	Player->CharacterStat->ScoreUp();
+	Player->GetSpawner()->DecCurrHunter();
 
 	FTimerHandle WaitHandle;
 	GetWorld()->GetTimerManager().SetTimer(WaitHandle, FTimerDelegate::CreateLambda([&]()
 		{
 			Destroy();
 		}), DeadSecCount, false);
+}
+
+void AHunter::OnValidAttack()
+{
+	// if not already attacked
+	if (!bAttacked)
+	{
+		SetHPBarVisible();
+		Cast<AHunterAiController>(GetController())->SetControllerToAttack();
+		AnimInstance->SetHunterToAttack();
+	}
 }

@@ -20,7 +20,7 @@ AHunterAiController::AHunterAiController()
 	{
 		BBAsset = BB.Object;
 	}
-
+	bIsAttacking = false;
 }
 
 const FName AHunterAiController::HomePosKey(TEXT("HomePos"));
@@ -42,22 +42,15 @@ void AHunterAiController::BeginPlay()
 
 	ControlledPawn = Cast<AHunter>(this->GetPawn());
 	Player = Cast<AEcoActorCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-	if (IsValid(Player))
-	{
-		Player->OnValidAttack.AddLambda([this]() -> void {
-			LOG(Warning, TEXT("hunter ai controller begin play add lambda"));
-			this->GetBlackboardComponent()->SetValueAsBool(AHunterAiController::WasAttackedKey, true);
-			this->GetBlackboardComponent()->SetValueAsVector(AHunterAiController::PlayerPosKey, Player->GetActorLocation());
-			});
-	}
-
-	auto ControlledPawn = Cast<AHunter>(this->GetPawn());
-
 }
 
 void AHunterAiController::Tick(float DeltaSeconds)
 {
-	
+	Super::Tick(DeltaSeconds);
+	if (bIsAttacking)
+	{
+		this->GetBlackboardComponent()->SetValueAsVector(AHunterAiController::PlayerPosKey, Player->GetActorLocation());
+	}
 }
 
 void AHunterAiController::OnPossess(APawn* InPawn)
@@ -88,4 +81,14 @@ void AHunterAiController::StopAI()
 	{
 		BehaviorTreeComponent->StopTree();
 	}
+}
+
+void AHunterAiController::SetControllerToAttack()
+{
+	bIsAttacking = true;
+
+	Player = Cast<AEcoActorCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+
+	this->GetBlackboardComponent()->SetValueAsBool(AHunterAiController::WasAttackedKey, true);
+	this->GetBlackboardComponent()->SetValueAsVector(AHunterAiController::PlayerPosKey, Player->GetActorLocation());
 }

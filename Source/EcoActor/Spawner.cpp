@@ -19,16 +19,22 @@ ASpawner::ASpawner()
 	capsule->InitCapsuleSize(42.f, 96.0f);
 	capsule->SetCollisionProfileName(TEXT("NoCollision"));
 
-	HunterTime = 1.0f;
-	AnimalTime = 1.0f;
-	GunTime = 3.0f;
+	HunterTime = 3.0f;
+	AnimalTime = 3.0f;
+	GunTime = 5.0f;
+	MaxHunter = 5;
+	MaxAnimal = 3;
+	MaxGun = 1;
 }
 
 // Called when the game starts or when spawned
 void ASpawner::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	CurrHunter = 0;
+	CurrAnimal = 0;
+	CurrGun = 0;
 	SpawnHunter();
 	SpawnAnimal();
 	SpawnGun();
@@ -44,15 +50,20 @@ void ASpawner::Tick(float DeltaTime)
 void ASpawner::SpawnHunter()
 {
 	GetWorld()->GetTimerManager().SetTimer(HunterHandle, FTimerDelegate::CreateLambda([&]()->void {
-		FVector2D RandomPoint = FMath::RandPointInCircle(8000.0f);
+		if (CurrHunter >= MaxHunter) return;
+
+		FVector2D RandomPoint = FMath::RandPointInCircle(2000.0f);
 		GetWorld()->SpawnActor<AHunter>(GetActorLocation() + FVector(RandomPoint, 400.0f), FRotator::ZeroRotator);
+		CurrHunter++;
 		}), HunterTime, true);
 }
 
 void ASpawner::SpawnAnimal()
 {
 	GetWorld()->GetTimerManager().SetTimer(AnimalHandle, FTimerDelegate::CreateLambda([&]()->void {
-		FVector2D RandomPoint = FMath::RandPointInCircle(8000.0f);
+		if (CurrAnimal >= MaxAnimal) return;
+
+		FVector2D RandomPoint = FMath::RandPointInCircle(2000.0f);
 		int8 RandomAnimal = FMath::RandRange(1, 3);
 		switch (RandomAnimal)
 		{
@@ -69,13 +80,31 @@ void ASpawner::SpawnAnimal()
 			GetWorld()->SpawnActor<AEcoActorCrocodile>(GetActorLocation() + FVector(RandomPoint, 400.0f), FRotator::ZeroRotator); break;
 		}
 		}
+		CurrAnimal++;
 		}), AnimalTime, true);
 }
 
 void ASpawner::SpawnGun()
 {
 	GetWorld()->GetTimerManager().SetTimer(GunHandle, FTimerDelegate::CreateLambda([&]()->void {
-		FVector2D RandomPoint = FMath::RandPointInCircle(8000.0f);
+		if (CurrGun >= MaxGun) return;
+
+		FVector2D RandomPoint = FMath::RandPointInCircle(1000.0f);
 		GetWorld()->SpawnActor<AGun>(GetActorLocation() + FVector(RandomPoint, 400.0f), FRotator::ZeroRotator);
+		CurrGun++;
 		}), GunTime, true);
+}
+
+void ASpawner::DecCurrHunter()
+{
+	CurrHunter--;
+}
+
+void ASpawner::DecCurrAnimal()
+{
+	CurrAnimal--;
+}
+void ASpawner::DecCurrGun()
+{
+	CurrGun--;
 }

@@ -3,6 +3,7 @@
 
 #include "Gun.h"
 #include "EcoActorCharacter.h"
+#include "Spawner.h"
 
 // Sets default values
 AGun::AGun()
@@ -15,6 +16,7 @@ AGun::AGun()
 
 	Trigger->SetBoxExtent(FVector(30.0f, 60.0f, 30.0f));
 	Trigger->SetRelativeLocation(FVector(0.0f, 20.0f, -30.0f));
+	Trigger->SetEnableGravity(true);
 	RootComponent = Trigger;
 	Gun->SetupAttachment(RootComponent);
 
@@ -34,7 +36,8 @@ AGun::AGun()
 void AGun::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	Trigger->SetSimulatePhysics(true);
 }
 
 void AGun::PostInitializeComponents()
@@ -52,6 +55,7 @@ void AGun::OnCharacterBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* 
 	if (Character->isAttacking()) return;
 
 	Character->Equip();
+	Character->GetSpawner()->DecCurrGun();
 
 	Destroy();
 }

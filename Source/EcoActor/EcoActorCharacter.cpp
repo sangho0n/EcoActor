@@ -11,6 +11,7 @@
 #include "EcoActorCharacterAnimInstance.h"
 #include "EcoActorCharacterState.h"
 #include "Hunter.h"
+#include "Spawner.h"
 #include "UserWidget.h"
 //#include "DrawDebugHelpers.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -37,6 +38,9 @@ AEcoActorCharacter::AEcoActorCharacter()
 	{
 		GetMesh()->SetSkeletalMesh(SK_NATHAN.Object);
 	}
+
+	//spawner = GetWorld()->SpawnActor<ASpawner>(GetActorLocation(), FRotator::ZeroRotator);
+	//spawner->K2_AttachRootComponentToActor(this);
 
 	// set our turn rates for input
 	BaseTurnRate = 75.f;
@@ -137,6 +141,8 @@ void AEcoActorCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	spawner = GetWorld()->SpawnActor<ASpawner>(GetActorLocation(), FRotator::ZeroRotator);
+	spawner->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform);
 
 	if (IsValid(CommonUIClass))
 	{
@@ -173,6 +179,11 @@ void AEcoActorCharacter::BeginPlay()
 UCameraComponent* AEcoActorCharacter::GetCameraComponent()
 {
 	return FollowCamera;
+}
+
+ASpawner* AEcoActorCharacter::GetSpawner()
+{
+	return spawner;
 }
 
 void AEcoActorCharacter::SetCharacterState(ECharacterState NewState)
@@ -488,10 +499,10 @@ void AEcoActorCharacter::OnComboMontageEnded(UAnimMontage* Mont, bool bInteruppe
 void AEcoActorCharacter::Hit()
 {
 	FVector ForwardVec = GetActorForwardVector();
-	FHitResult HitResult;
+	TArray<FHitResult> HitResults;
 	FCollisionQueryParams Params(NAME_None, false, this);
-	bool bResult = GetWorld()->SweepSingleByChannel(
-		HitResult,
+	bool bResult = GetWorld()->SweepMultiByChannel(
+		HitResults,
 		GetActorLocation(),
 		GetActorLocation() + ForwardVec * HitRange,
 		FQuat::Identity,
@@ -502,13 +513,14 @@ void AEcoActorCharacter::Hit()
 
 	if (bResult)
 	{
-		OnValidAttack.Broadcast();
-		// delegate에 boradcast시키면 setpercent에서 오류가 나서 부득이하게 캐릭터에서 직접 hunter 접근
-		auto Hunter = Cast<AHunter>(HitResult.Actor);
-		Hunter->SetHPBarVisible();
+		for (auto HitResult : HitResults)
+		{
+			auto Hunter = Cast<AHunter>(HitResult.Actor);
+			Hunter->OnValidAttack();
+			FDamageEvent DamageEvent;
+			HitResult.Actor->TakeDamage(HitDamage, DamageEvent, GetController(), this);
+		}
 
-		FDamageEvent DamageEvent;
-		HitResult.Actor->TakeDamage(HitDamage, DamageEvent, GetController(), this);
 	}
 
 //#if ENABLE_DRAW_DEBUG
@@ -593,10 +605,8 @@ void AEcoActorCharacter::Shot()
 		);
 		if (bResult)
 		{
-			OnValidAttack.Broadcast();
-			// delegate에 boradcast시키면 setpercent에서 오류가 나서 부득이하게 캐릭터에서 직접 hunter 접근
 			auto Hunter = Cast<AHunter>(HitResult.Actor);
-			Hunter->SetHPBarVisible();
+			Hunter->OnValidAttack();
 
 			FDamageEvent DamageEvent;
 			HitResult.Actor->TakeDamage(ShotDamage, DamageEvent, GetController(), this);

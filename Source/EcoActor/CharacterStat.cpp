@@ -12,7 +12,7 @@ UCharacterStat::UCharacterStat()
 	bWantsInitializeComponent = true;
 	bIsDead = false;
 	Score = 0;
-	ScoreMax = 3;
+	ScoreMax = 10;
 }
 
 

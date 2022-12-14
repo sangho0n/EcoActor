@@ -32,4 +32,19 @@ private:
 	void SpawnHunter();
 	void SpawnAnimal();
 	void SpawnGun();
+
+	int32 MaxHunter;
+	int32 MaxAnimal;
+	int32 MaxGun;
+	UPROPERTY(VisibleAnywhere)
+	int32 CurrHunter;
+	UPROPERTY(VisibleAnywhere)
+	int32 CurrAnimal;
+	UPROPERTY(VisibleAnywhere)
+	int32 CurrGun;
+
+public:
+	void DecCurrHunter();
+	void DecCurrAnimal();
+	void DecCurrGun();
 };
