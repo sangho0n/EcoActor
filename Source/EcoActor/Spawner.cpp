@@ -16,7 +16,7 @@ ASpawner::ASpawner()
 
 	auto capsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComponent"));
 	RootComponent = capsule;
-	capsule->InitCapsuleSize(42.f, 96.0f);
+	capsule->InitCapsuleSize(0.0f, 0.0f);
 	capsule->SetCollisionProfileName(TEXT("NoCollision"));
 
 	HunterTime = 3.0f;
@@ -52,8 +52,25 @@ void ASpawner::SpawnHunter()
 	GetWorld()->GetTimerManager().SetTimer(HunterHandle, FTimerDelegate::CreateLambda([&]()->void {
 		if (CurrHunter >= MaxHunter) return;
 
+	ReRand:
 		FVector2D RandomPoint = FMath::RandPointInCircle(2000.0f);
-		GetWorld()->SpawnActor<AHunter>(GetActorLocation() + FVector(RandomPoint, 400.0f), FRotator::ZeroRotator);
+
+		// 지면으로 linetrace
+		FHitResult HitResult;
+		FCollisionQueryParams Params = FCollisionQueryParams::DefaultQueryParam;
+		bool bResult = GetWorld()->LineTraceSingleByChannel(
+			HitResult,
+			FVector(RandomPoint, 400.0f),
+			FVector(RandomPoint, -1000.0f),
+			ECollisionChannel::ECC_GameTraceChannel7,
+			Params
+		);
+
+		// 유효한 위치일 경우 spawn
+		// 유효하지 않은 위치일 경우 다시 randompoint 얻기
+		if (!bResult) goto ReRand;
+		if (nullptr == GetWorld()->SpawnActor<AHunter>(HitResult.Location, FRotator::ZeroRotator)) { goto ReRand; }
+
 		CurrHunter++;
 		}), HunterTime, true);
 }
@@ -63,23 +80,42 @@ void ASpawner::SpawnAnimal()
 	GetWorld()->GetTimerManager().SetTimer(AnimalHandle, FTimerDelegate::CreateLambda([&]()->void {
 		if (CurrAnimal >= MaxAnimal) return;
 
+	ReRand:
 		FVector2D RandomPoint = FMath::RandPointInCircle(2000.0f);
 		int8 RandomAnimal = FMath::RandRange(1, 3);
+		// 지면으로 linetrace
+		FHitResult HitResult;
+		FCollisionQueryParams Params = FCollisionQueryParams::DefaultQueryParam;
+		bool bResult = GetWorld()->LineTraceSingleByChannel(
+			HitResult,
+			FVector(RandomPoint, 400.0f),
+			FVector(RandomPoint, -1000.0f),
+			ECollisionChannel::ECC_GameTraceChannel7,
+			Params
+		);
+
+		// 유효한 위치일 경우 spawn
+		// 유효하지 않은 위치일 경우 다시 randompoint 얻기
+		if (!bResult) goto ReRand;
 		switch (RandomAnimal)
 		{
 		case 1:
 		{
-			GetWorld()->SpawnActor<AEcoActorZebra>(GetActorLocation() + FVector(RandomPoint, 400.0f), FRotator::ZeroRotator); break;
+			if (nullptr == GetWorld()->SpawnActor<AEcoActorZebra>(HitResult.Location, FRotator::ZeroRotator)) { goto ReRand; }
+			break;
 		}
 		case 2:
 		{
-			GetWorld()->SpawnActor<AEcoActorElephant>(GetActorLocation() + FVector(RandomPoint, 400.0f), FRotator::ZeroRotator); break;
+			if (nullptr == GetWorld()->SpawnActor<AEcoActorElephant>(HitResult.Location, FRotator::ZeroRotator)) { goto ReRand; }
+			break;
 		}
 		case 3:
 		{
-			GetWorld()->SpawnActor<AEcoActorCrocodile>(GetActorLocation() + FVector(RandomPoint, 400.0f), FRotator::ZeroRotator); break;
+			if (nullptr == GetWorld()->SpawnActor<AEcoActorCrocodile>(HitResult.Location, FRotator::ZeroRotator)) { goto ReRand; }
+			break;
 		}
 		}
+
 		CurrAnimal++;
 		}), AnimalTime, true);
 }
@@ -88,9 +124,25 @@ void ASpawner::SpawnGun()
 {
 	GetWorld()->GetTimerManager().SetTimer(GunHandle, FTimerDelegate::CreateLambda([&]()->void {
 		if (CurrGun >= MaxGun) return;
+	ReRand:
+		FVector2D RandomPoint = FMath::RandPointInCircle(2000.0f);
 
-		FVector2D RandomPoint = FMath::RandPointInCircle(1000.0f);
-		GetWorld()->SpawnActor<AGun>(GetActorLocation() + FVector(RandomPoint, 400.0f), FRotator::ZeroRotator);
+		// 지면으로 linetrace
+		FHitResult HitResult;
+		FCollisionQueryParams Params = FCollisionQueryParams::DefaultQueryParam;
+		bool bResult = GetWorld()->LineTraceSingleByChannel(
+			HitResult,
+			FVector(RandomPoint, 400.0f),
+			FVector(RandomPoint, -1000.0f),
+			ECollisionChannel::ECC_GameTraceChannel7,
+			Params
+		);
+
+		// 유효한 위치일 경우 spawn
+		// 유효하지 않은 위치일 경우 다시 randompoint 얻기
+		if (!bResult) goto ReRand;
+		if (nullptr == GetWorld()->SpawnActor<AGun>(HitResult.Location, FRotator::ZeroRotator)) { goto ReRand; }
+
 		CurrGun++;
 		}), GunTime, true);
 }

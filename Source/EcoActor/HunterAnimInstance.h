@@ -49,4 +49,6 @@ private:
 	UAnimationAsset* DeadAnim;
 public:
 	void PlayDeadAnim();
+
+	void SetHunterToHyperMode();
 };

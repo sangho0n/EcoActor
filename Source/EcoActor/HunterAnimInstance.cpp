@@ -49,3 +49,8 @@ void UHunterAnimInstance::SetHunterToAttack()
 {
 	bIsAttacking = true;
 }
+
+void UHunterAnimInstance::SetHunterToHyperMode()
+{
+	bIsHyperMode = true;
+}

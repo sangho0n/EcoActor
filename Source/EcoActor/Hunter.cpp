@@ -157,6 +157,11 @@ void AHunter::PostInitializeComponents()
 	CharacterStat->OnHPIsZero.AddDynamic(this, &AHunter::SetDead);
 
 	CharacterStat->OnHPChanged.AddLambda([this]()->void {
+		if (CharacterStat->GetHPRatio() <= 0.4)
+		{
+			AnimInstance->SetHunterToHyperMode();
+			GetCharacterMovement()->MaxWalkSpeed *= 1.6f;
+		}
 		});
 }
 

@@ -15,12 +15,11 @@ AGun::AGun()
 	Gun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Gun"));
 
 	Trigger->SetBoxExtent(FVector(30.0f, 60.0f, 30.0f));
-	Trigger->SetRelativeLocation(FVector(0.0f, 20.0f, -30.0f));
-	Trigger->SetEnableGravity(true);
+	Trigger->SetRelativeLocation(FVector(0.0f, 20.0f, 30.0f));
 	RootComponent = Trigger;
 	Gun->SetupAttachment(RootComponent);
 
-	Gun->SetRelativeRotation(FRotator(90.0f, 0.0f, 0.0f));
+	Gun->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, -10.0f), FRotator(90.0f, 0.0f, 0.0f));
 
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> RIFLE(TEXT("/Game/MilitaryWeapDark/Weapons/Assault_Rifle_B.Assault_Rifle_B"));
 	if (RIFLE.Succeeded())

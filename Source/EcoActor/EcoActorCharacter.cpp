@@ -720,7 +720,7 @@ void AEcoActorCharacter::QPressed()
 void AEcoActorCharacter::SetDead()
 {
 	SetCharacterState(ECharacterState::DEAD);
-	Destroy();
+	UGameplayStatics::SetGamePaused(GetWorld(), true);
 }
 
 void AEcoActorCharacter::ZebraBuff()
@@ -757,6 +757,7 @@ void AEcoActorCharacter::CrocoBuff()
 	FTimerHandle TimerHandle;
 	if (bOnCrocoBuff)
 	{
+		HitDamage = ConstHitDam; ShotDamage = ConstShotDam;
 		GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
 		goto SetBuff;
 	}
@@ -766,11 +767,10 @@ void AEcoActorCharacter::CrocoBuff()
 SetBuff:
 	LOG(Warning, TEXT("croco buff start"));
 	// extra damage for 5 second
-	auto TempHitDam = HitDamage, TempShotDam = ShotDamage;
 	HitDamage *= 2.0f; ShotDamage *= 2.0f;
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateLambda([&]()->void {
-		HitDamage = TempHitDam;
-		ShotDamage = TempShotDam;
+		HitDamage = ConstHitDam;
+		ShotDamage = ConstShotDam;
 		bOnCrocoBuff = false;
 		LOG(Warning, TEXT("croco buff end"));
 		}), 5.0f, false);
@@ -779,6 +779,7 @@ SetBuff:
 void AEcoActorCharacter::Complete()
 {
 	LOG(Warning, TEXT("success"));
+	UGameplayStatics::SetGamePaused(GetWorld(), true);
 	SuccessWidget = CreateWidget(GetWorld(), SuccessWidgetClass);
 	bCanBeDamaged = false;
 	if (IsValid(SuccessWidget))

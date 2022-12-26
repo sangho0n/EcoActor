@@ -141,6 +141,7 @@ private:
 	bool bHoldKeyControl;
 	FVector TargetPoint;
 	float HitDamage = 5.0f;
+	const float ConstHitDam = 5.0f;
 
 	class UEcoActorCharacterAnimInstance* AnimInstance;
 protected:
@@ -161,8 +162,9 @@ private:
 	const int32 MaxBullets = 20;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category=Gun, Meta=(AllowPrivateAccess=true))
 	bool bIsEquipping;
-	const float ShottableDistance = 3000.0f;
+	const float ShottableDistance = 5000.0f;
 	float ShotDamage = 10.0f;
+	const float ConstShotDam = 10.0f;
 
 	UFUNCTION()
 	void Shot();
