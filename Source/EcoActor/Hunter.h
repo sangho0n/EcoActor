@@ -57,6 +57,8 @@ private:
 	bool bIsDead;
 	int32 DeadSecCount;
 
+	UParticleSystemComponent* BloodParticle;
+
 public :
 	void OnValidAttack();
 };

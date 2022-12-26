@@ -20,6 +20,8 @@ AHunter::AHunter()
 	RootComponent = GetCapsuleComponent();
 	GetCapsuleComponent()->SetCollisionProfileName(TEXT("Hunter"));
 	HPBarWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("HPBarWidget"));
+	BloodParticle = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("BloodParticle"));
+	BloodParticle->SetupAttachment(RootComponent);
 
 	// skeletal mesh
 	GetMesh()->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, -96.0f), FRotator(0.0f, -90.0f, 0.0f));
@@ -62,6 +64,12 @@ AHunter::AHunter()
 	{
 		HPBarWidget->SetWidgetClass(HPBARWIDGET.Class);
 		HPBarWidget->SetDrawSize(FVector2D(150.0f, 50.0f));
+	}
+
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> BloodAsset(TEXT("/Game/Realistic_Starter_VFX_Pack_Vol2/Particles/Blood/P_Blood_Splat_Cone.P_Blood_Splat_Cone"));
+	if (BloodAsset.Succeeded())
+	{
+		BloodParticle->SetTemplate(BloodAsset.Object);
 	}
 
 
@@ -186,9 +194,12 @@ void AHunter::Tick(float DeltaTime)
 float AHunter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser)
 {
 	if (!bCanBeDamaged) return 0.0f;
+
 	float FinalDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 	FinalDamage = DamageAmount;
 	CharacterStat->SetDamage(FinalDamage);
+
+	BloodParticle->Activate(true);
 
 	LOG(Warning, TEXT("hunter HP %f"), CharacterStat->GetCurrentHP());
 
