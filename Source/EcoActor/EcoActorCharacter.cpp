@@ -556,6 +556,8 @@ void AEcoActorCharacter::Hit()
 			HitResult.Actor->TakeDamage(HitDamage, DamageEvent, GetController(), this);
 		}
 
+		// 잠깐 무적 및 멈추기
+		// 카메라 흔들기
 	}
 
 //#if ENABLE_DRAW_DEBUG
