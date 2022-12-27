@@ -54,13 +54,15 @@ void ASpawner::SpawnHunter()
 
 	ReRand:
 		FVector2D RandomPoint = FMath::RandPointInCircle(2000.0f);
+		RandomPoint.X += GetActorLocation().X;
+		RandomPoint.Y += GetActorLocation().Y;
 
 		// 지면으로 linetrace
 		FHitResult HitResult;
 		FCollisionQueryParams Params = FCollisionQueryParams::DefaultQueryParam;
 		bool bResult = GetWorld()->LineTraceSingleByChannel(
 			HitResult,
-			FVector(RandomPoint, 400.0f),
+			FVector(RandomPoint, 1000.0f),
 			FVector(RandomPoint, -1000.0f),
 			ECollisionChannel::ECC_GameTraceChannel7,
 			Params
@@ -82,13 +84,16 @@ void ASpawner::SpawnAnimal()
 
 	ReRand:
 		FVector2D RandomPoint = FMath::RandPointInCircle(2000.0f);
+		RandomPoint.X += GetActorLocation().X;
+		RandomPoint.Y += GetActorLocation().Y;
+
 		int8 RandomAnimal = FMath::RandRange(1, 3);
 		// 지면으로 linetrace
 		FHitResult HitResult;
 		FCollisionQueryParams Params = FCollisionQueryParams::DefaultQueryParam;
 		bool bResult = GetWorld()->LineTraceSingleByChannel(
 			HitResult,
-			FVector(RandomPoint, 400.0f),
+			FVector(RandomPoint, 1000.0f),
 			FVector(RandomPoint, -1000.0f),
 			ECollisionChannel::ECC_GameTraceChannel7,
 			Params
@@ -99,7 +104,7 @@ void ASpawner::SpawnAnimal()
 		if (!bResult) goto ReRand;
 		switch (RandomAnimal)
 		{
-		case 1:
+		case 3:
 		{
 			if (nullptr == GetWorld()->SpawnActor<AEcoActorZebra>(HitResult.Location, FRotator::ZeroRotator)) { goto ReRand; }
 			break;
@@ -109,7 +114,7 @@ void ASpawner::SpawnAnimal()
 			if (nullptr == GetWorld()->SpawnActor<AEcoActorElephant>(HitResult.Location, FRotator::ZeroRotator)) { goto ReRand; }
 			break;
 		}
-		case 3:
+		case 1:
 		{
 			if (nullptr == GetWorld()->SpawnActor<AEcoActorCrocodile>(HitResult.Location, FRotator::ZeroRotator)) { goto ReRand; }
 			break;
@@ -126,13 +131,15 @@ void ASpawner::SpawnGun()
 		if (CurrGun >= MaxGun) return;
 	ReRand:
 		FVector2D RandomPoint = FMath::RandPointInCircle(2000.0f);
+		RandomPoint.X += GetActorLocation().X;
+		RandomPoint.Y += GetActorLocation().Y;
 
 		// 지면으로 linetrace
 		FHitResult HitResult;
 		FCollisionQueryParams Params = FCollisionQueryParams::DefaultQueryParam;
 		bool bResult = GetWorld()->LineTraceSingleByChannel(
 			HitResult,
-			FVector(RandomPoint, 400.0f),
+			FVector(RandomPoint, 1000.0f),
 			FVector(RandomPoint, -1000.0f),
 			ECollisionChannel::ECC_GameTraceChannel7,
 			Params

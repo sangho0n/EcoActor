@@ -39,9 +39,6 @@ AEcoActorCharacter::AEcoActorCharacter()
 		GetMesh()->SetSkeletalMesh(SK_NATHAN.Object);
 	}
 
-	//spawner = GetWorld()->SpawnActor<ASpawner>(GetActorLocation(), FRotator::ZeroRotator);
-	//spawner->K2_AttachRootComponentToActor(this);
-
 	// set our turn rates for input
 	BaseTurnRate = 75.f;
 	BaseLookUpRate = 75.f;
@@ -63,6 +60,9 @@ AEcoActorCharacter::AEcoActorCharacter()
 	// character stat component
 	CharacterStat = CreateDefaultSubobject<UCharacterStat>(TEXT("CharacterState"));
 	CharacterStat->SetMaxHP(200.0f);
+
+	// spawner
+	spawner = CreateDefaultSubobject<ASpawner>(TEXT("Spawner"));
 
 	// Animation
 	GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);
@@ -188,8 +188,6 @@ void AEcoActorCharacter::BeginPlay()
 	PucnchAudioComponent->SetSound(PucnchSound);
 	ShotGunAudioComponent->Stop();
 
-	spawner = GetWorld()->SpawnActor<ASpawner>(GetActorLocation(), FRotator::ZeroRotator);
-	spawner->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform);
 
 	if (IsValid(CommonUIClass))
 	{
@@ -265,6 +263,10 @@ void AEcoActorCharacter::SetCharacterState(ECharacterState NewState)
 			PlayerController->bEnableClickEvents = true;
 			PlayerController->bEnableMouseOverEvents = true;
 		}
+
+
+		spawner = GetWorld()->SpawnActor<ASpawner>(FVector::ZeroVector, FRotator::ZeroRotator);
+		spawner->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform);
 		break;
 	}
 	case ECharacterState::READY:

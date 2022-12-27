@@ -73,28 +73,5 @@ Plugins/*/Intermediate/*
 # Cache files for the editor to use
 DerivedDataCache/*
 
-# Content 폴더 내 Main만 제외하고 모두 무시
-!Content/Main
-!Content/Level2
-!Content/Level1
-!Content/BluePrint
-Content/AfricanAnimalsPack
-Content/AnimStarterPack
-Content/Cargo_Ship
-Content/Collections
-Content/Developers
-Content/Frank_FightingGame
-Content/Geometry
-Content/Iceberg
-Content/InfinityBladeGrassLands
-Content/LowPolyGarbageRecyclingAssets
-Content/Mannequin
-Content/MilitaryWeapDark
-Content/Polar_Bear_Cub
-Content/Scanned3DPeoplePack
-Content/snow_ice_materials
-Content/StarterContent
-Content/StylizedForestPack
-Content/ThirdPerson
-Content/ThirdPersonCPP
-Content/Zombie_01
+# Content 폴더 무시
+Content/*

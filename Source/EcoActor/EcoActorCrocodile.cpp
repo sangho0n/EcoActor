@@ -33,7 +33,7 @@ AEcoActorCrocodile::AEcoActorCrocodile()
 	{
 		GetMesh()->SetAnimInstanceClass(CROCOANIM.Class);
 	}
-	GetCharacterMovement()->MaxWalkSpeed = 300.0f;
+	GetCharacterMovement()->MaxWalkSpeed = 500.0f;
 
 	AIControllerClass = AAnimalAIController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
