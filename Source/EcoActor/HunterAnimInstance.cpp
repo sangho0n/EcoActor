@@ -16,6 +16,8 @@ UHunterAnimInstance::UHunterAnimInstance()
 	{
 		DeadAnim = DEADANIM.Object;
 	}
+
+	bHit = false;
 }
 
 void UHunterAnimInstance::NativeBeginPlay()
@@ -45,6 +47,7 @@ void UHunterAnimInstance::PlayDeadAnim()
 	pawn->GetMesh()->PlayAnimation(DeadAnim, false);
 }
 
+
 void UHunterAnimInstance::SetHunterToAttack()
 {
 	bIsAttacking = true;
@@ -53,4 +56,15 @@ void UHunterAnimInstance::SetHunterToAttack()
 void UHunterAnimInstance::SetHunterToHyperMode()
 {
 	bIsHyperMode = true;
+}
+
+void UHunterAnimInstance::SetHit(bool isHit)
+{
+	bHit = isHit;
+	if (bHit)
+	{
+		LOG(Warning, TEXT("True hit"));
+	}
+	else
+		LOG(Warning, TEXT("Not hit"));
 }

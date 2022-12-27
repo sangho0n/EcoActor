@@ -47,8 +47,15 @@ private:
 	class AEcoActorCharacter* Player;
 
 	UAnimationAsset* DeadAnim;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Hit, Meta = (AllowPrivateAccess = true))
+	bool bHit;
+
 public:
 	void PlayDeadAnim();
 
 	void SetHunterToHyperMode();
+
+	UFUNCTION(BlueprintCallable, Category=Hit)
+	void SetHit(bool isHit);
 };

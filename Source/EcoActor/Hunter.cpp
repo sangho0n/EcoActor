@@ -72,6 +72,7 @@ AHunter::AHunter()
 		BloodParticle->SetTemplate(BloodAsset.Object);
 	}
 
+	BloodParticle->SetAutoActivate(false);
 
 	CharacterStat = CreateDefaultSubobject<UCharacterStat>(TEXT("CharacterState"));
 	CharacterStat->SetMaxHP(50.0f);
@@ -88,6 +89,8 @@ AHunter::AHunter()
 
 	bCanBeDamaged = true;
 	DeadSecCount = 3;
+	bStepBack = false;
+	TargetPoint = FVector::ZeroVector;
 }
 
 // Called when the game starts or when spawned
@@ -188,12 +191,25 @@ void AHunter::Tick(float DeltaTime)
 
 		HPBarWidget->SetWorldRotation(HPBarToCameraRot);
 	}
+
+	if (bStepBack)
+	{
+		bStepBack = false;
+
+		SetActorLocation(FMath::VInterpTo(GetActorLocation(), TargetPoint, DeltaTime, 3.0f), true);
+	}
 }
 
 
 float AHunter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser)
 {
 	if (!bCanBeDamaged) return 0.0f;
+
+	bAttacked = true;
+
+	// 뒤로 물러나면서 피격애니메이션 재생
+	TargetPoint = GetActorLocation() + (GetActorLocation() - DamageCauser->GetActorLocation()).Normalize() * 100.0f;
+	StepBack();
 
 	float FinalDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 	FinalDamage = DamageAmount;
@@ -206,6 +222,11 @@ float AHunter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageE
 	return FinalDamage;
 }
 
+void AHunter::StepBack()
+{
+	bStepBack = true;
+	AnimInstance->SetHit(true);
+}
 
 void AHunter::Attack()
 {
