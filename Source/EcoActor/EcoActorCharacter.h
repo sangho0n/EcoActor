@@ -204,5 +204,12 @@ private:
 	UAudioComponent* PickupGunAudioComponent;
 	class USoundBase* ShotGunSound;
 	UAudioComponent* ShotGunAudioComponent;
+	class USoundBase* PucnchSound;
+	UAudioComponent* PucnchAudioComponent;
+
+	TSubclassOf<UCameraShake> CameraShake;
+
+private:
+	void ShakeCamera();
 };
 

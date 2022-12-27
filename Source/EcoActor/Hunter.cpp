@@ -89,8 +89,6 @@ AHunter::AHunter()
 
 	bCanBeDamaged = true;
 	DeadSecCount = 3;
-	bStepBack = false;
-	TargetPoint = FVector::ZeroVector;
 }
 
 // Called when the game starts or when spawned
@@ -192,12 +190,6 @@ void AHunter::Tick(float DeltaTime)
 		HPBarWidget->SetWorldRotation(HPBarToCameraRot);
 	}
 
-	if (bStepBack)
-	{
-		bStepBack = false;
-
-		SetActorLocation(FMath::VInterpTo(GetActorLocation(), TargetPoint, DeltaTime, 3.0f), true);
-	}
 }
 
 
@@ -207,25 +199,29 @@ float AHunter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageE
 
 	bAttacked = true;
 
-	// 뒤로 물러나면서 피격애니메이션 재생
-	TargetPoint = GetActorLocation() + (GetActorLocation() - DamageCauser->GetActorLocation()).Normalize() * 100.0f;
-	StepBack();
-
 	float FinalDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+	// 뒤로 물러나면서 피격애니메이션 재생
+	StepBack(EventInstigator);
+	BloodParticle->Activate(true);
+
 	FinalDamage = DamageAmount;
 	CharacterStat->SetDamage(FinalDamage);
 
-	BloodParticle->Activate(true);
 
 	LOG(Warning, TEXT("hunter HP %f"), CharacterStat->GetCurrentHP());
 
 	return FinalDamage;
 }
 
-void AHunter::StepBack()
+void AHunter::StepBack(AController* EventInstigator)
 {
-	bStepBack = true;
 	AnimInstance->SetHit(true);
+	FVector AwayFromPlayer = (GetActorLocation() - EventInstigator->GetPawn()->GetActorLocation());
+	AwayFromPlayer.Normalize();
+	AwayFromPlayer.Z = 0;
+	
+	SetActorLocation(GetActorLocation() + AwayFromPlayer * 300.0f, true);
 }
 
 void AHunter::Attack()
@@ -285,7 +281,7 @@ void AHunter::Attack()
 
 void AHunter::SetDead()
 {
-	GetCapsuleComponent()->SetCollisionProfileName(TEXT("IgnoreOnlyPawn"));
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("OverlapOnlyPawn"));
 	bIsDead = true;
 	bCanBeDamaged = false;
 	GetController()->Destroy();

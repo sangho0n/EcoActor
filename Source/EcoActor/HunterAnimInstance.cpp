@@ -3,6 +3,7 @@
 
 #include "HunterAnimInstance.h"
 #include "EcoActorCharacter.h"
+#include "Hunter.h"
 #include "Kismet/GameplayStatics.h"
 
 UHunterAnimInstance::UHunterAnimInstance()
@@ -61,10 +62,4 @@ void UHunterAnimInstance::SetHunterToHyperMode()
 void UHunterAnimInstance::SetHit(bool isHit)
 {
 	bHit = isHit;
-	if (bHit)
-	{
-		LOG(Warning, TEXT("True hit"));
-	}
-	else
-		LOG(Warning, TEXT("Not hit"));
 }

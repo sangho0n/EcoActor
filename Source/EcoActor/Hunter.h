@@ -62,8 +62,5 @@ private:
 public :
 	void OnValidAttack();
 
-	void StepBack();
-private:
-	bool bStepBack;
-	FVector TargetPoint;
+	void StepBack(AController* EventInstigator);
 };

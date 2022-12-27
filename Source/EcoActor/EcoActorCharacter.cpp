@@ -100,6 +100,12 @@ AEcoActorCharacter::AEcoActorCharacter()
 
 	hasInitialized = true;
 
+	// camera shaker
+	static ConstructorHelpers::FClassFinder<UCameraShake> CAMSHAKE(TEXT("/Game/Main/Anim/Character/HitCameraShaker.HitCameraShaker_C"));
+	if (CAMSHAKE.Succeeded())
+	{
+		CameraShake = CAMSHAKE.Class;
+	}
 
 	static ConstructorHelpers::FClassFinder<UUserWidget> COMMONUI(TEXT("/Game/Main/UI/BP_Level3CommonUI.BP_Level3CommonUI_C"));
 	if (COMMONUI.Succeeded())
@@ -152,13 +158,21 @@ AEcoActorCharacter::AEcoActorCharacter()
 	{
 		ShotGunSound = SHOTSOUND.Object;
 	}
-	
+	static ConstructorHelpers::FObjectFinder<USoundBase> PUNCHSOUND(TEXT("/Game/Main/Sound/Punch.Punch"));
+	if (PUNCHSOUND.Succeeded())
+	{
+		PucnchSound = PUNCHSOUND.Object;
+	}
+
 	BGMComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("BGMComponent"));
 	PickupGunAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("PickupGunAudioComponent"));
 	ShotGunAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("ShotGunAudioComponent"));
+	PucnchAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("PunchAudioComp"));
+
 	BGMComponent->SetupAttachment(RootComponent);
 	PickupGunAudioComponent->SetupAttachment(RootComponent);
 	ShotGunAudioComponent->SetupAttachment(RootComponent);
+	PucnchAudioComponent->SetupAttachment(RootComponent);
 }
 
 void AEcoActorCharacter::BeginPlay()
@@ -170,6 +184,8 @@ void AEcoActorCharacter::BeginPlay()
 	PickupGunAudioComponent->SetSound(PickupGunSound);
 	PickupGunAudioComponent->Stop();
 	ShotGunAudioComponent->SetSound(ShotGunSound);
+	ShotGunAudioComponent->Stop();
+	PucnchAudioComponent->SetSound(PucnchSound);
 	ShotGunAudioComponent->Stop();
 
 	spawner = GetWorld()->SpawnActor<ASpawner>(GetActorLocation(), FRotator::ZeroRotator);
@@ -548,6 +564,9 @@ void AEcoActorCharacter::Hit()
 
 	if (bResult)
 	{
+		PucnchAudioComponent->Play(0.38f);
+		GetWorld()->GetFirstPlayerController()->ClientPlayCameraShake(CameraShake, 1.0f);
+
 		for (auto HitResult : HitResults)
 		{
 			auto Hunter = Cast<AHunter>(HitResult.Actor);
